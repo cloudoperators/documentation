@@ -1,7 +1,7 @@
 # Operation platform documentation
 
 [![REUSE status](https://api.reuse.software/badge/github.com/cloudoperators/greenhouse)](https://api.reuse.software/info/github.com/cloudoperators/documentation)
-<a href="https://github.com/cloudoperators/documentation"><img align="left" width="150" height="170" src="./docs/assets/greenhouse.svg"></a>
+<a href="https://github.com/cloudoperators/documentation"><img align="left" width="150" height="170" src="https://raw.githubusercontent.com/cloudoperators/greenhouse/main/docs/assets/greenhouse.svg"></a>
 
 This repository contains documentation for the operations platform
 
