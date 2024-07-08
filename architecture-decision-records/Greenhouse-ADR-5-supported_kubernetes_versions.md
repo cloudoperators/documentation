@@ -1,4 +1,4 @@
-# ADR-4 Supported Kubernetes Versions
+# ADR-5 Supported Kubernetes Versions
 
 ## Decision Contributors
 
