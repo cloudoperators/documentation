@@ -44,7 +44,7 @@ Use cases being:
 
 ## Related Decision Records
 
-N/A
+Supersedes [Greenhouse-ADR-3-location_of_plugins.md](Greenhouse-ADR-3-location_of_plugins.md)
 
 ## Decision Drivers
 

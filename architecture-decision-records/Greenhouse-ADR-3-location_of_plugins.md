@@ -35,6 +35,10 @@ During developement the question got raised whatever it is a good decision/archi
 > User story: Customer onboards a newly created cluster and requires an Ingress to expose applications. Via Greenhouse the Ingress Plugin can be configured which results in a deployment of the ingress controller within the customer cluster.
 > The PluginConfig, dashboard reflects the  current status of relevant underlying resources.
 
+## Related Decision Records
+
+Superseded by [Greenhouse-ADR-6-central_cluster.md](Greenhouse-ADR-6-central_cluster.md)
+
 ## Decision Drivers
 
 * Should work with/ focus on the for MVP in scope Applications
