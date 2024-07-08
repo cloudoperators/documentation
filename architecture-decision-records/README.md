@@ -16,3 +16,9 @@ The `CloudOperators` component is used for ADRs of general nature.
 Example:
 * `Greenhouse-ADR-1-logical_authorization_concept_for_plugins.md`
 * `CloudOperators-ADR-<number>-<name>.md`
+
+### Contributing
+
+Each ADR should live on a dedicated branch and be proposed through a pull request (PR).  
+Decision contributors are to be assigned as `reviewers` to the PR.  
+An ADR is accepted, once all reviewers approved the PR. 
