@@ -15,7 +15,7 @@ High-level context and problem description.
 
 ## Related Decision Records
 
-Reference related ADRs here if any.
+Reference related or superseded ADRs here if any.
 
 ## Decision Drivers
 
