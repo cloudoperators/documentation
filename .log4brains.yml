@@ -1,0 +1,5 @@
+project:
+  name: Greenhouse
+  tz: Europe/Berlin
+  adrFolder: architecture-decision-records
+  packages: []
