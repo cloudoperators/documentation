@@ -47,8 +47,8 @@ e.g. `20240101-<provided-title>.md`
 
 Example:
 
-- `001-Greenhouse-logical-authorization-concept-for-plugins.md`
-- `002-CloudOperators-<name>.md`
+- `001-greenhouse-logical-authorization-concept-for-plugins.md`
+- `002-cloudOperators-<name>.md`
 
 ## Contributing
 
