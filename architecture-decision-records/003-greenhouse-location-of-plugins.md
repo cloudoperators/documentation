@@ -4,7 +4,6 @@
 - Deciders: Fabian Ruff, Esther Schmitz, Arturo Reuschenbach, Arno Uhlig, Uwe Mayer, David Rochow, David Gogl
 - Date: 2024-07-14
 - Tags: greenhouse
-- Technical Story: [description | ticket/issue URL] <!-- optional -->
 
 ## Context and Problem Statement
 

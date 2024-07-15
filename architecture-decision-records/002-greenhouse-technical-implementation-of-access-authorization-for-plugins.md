@@ -1,6 +1,6 @@
 # 002 Technical Implementation of access Authorization for Greenhouse Plugins
 
-- Status: poc
+- Status: draft
 - Deciders: Fabian Ruff, Esther Schmitz, Arno Uhlig, Uwe Mayer, David Rochow
 - Date: 2024-07-14
 - Tags: greenhouse
