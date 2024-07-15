@@ -38,7 +38,7 @@ log4brains adr new
 e.g. `20240101-<provided-title>.md`
 
 - Please rename the generated filename to `<number>-<component>-<provided-title>.md`.  
-- The `<number>` consists of four digits. Use leading zeros if necessary.
+- The `<number>` should consists of three digits. Use leading zeros if necessary.
 - Component can be one of `Greenhouse` | `CloudOperators`.
 
 > The `CloudOperators` component is used for ADRs of general nature.
