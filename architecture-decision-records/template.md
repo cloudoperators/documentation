@@ -1,17 +1,10 @@
-# ADR- [short title of solved problem and solution]
+# [short title of solved problem and solution]
 
--
-
-Status: [draft | proposed | rejected | accepted | deprecated | … | superseded by [xxx](yyyymmdd-xxx.md)] <!-- optional -->
-
+- Status: [draft | proposed | rejected | accepted | deprecated | … | superseded by [xxx](yyyymmdd-xxx.md)] <!-- optional -->
 - Deciders: [list everyone involved in the decision] <!-- optional -->
--
-
-Date: [YYYY-MM-DD when the decision was last updated] <!-- optional. To customize the ordering without relying on Git creation dates and filenames -->
-
+- Date: [YYYY-MM-DD when the decision was last updated] <!-- optional. To customize the ordering without relying on Git creation dates and filenames -->
 - Tags: [greenhouse / cloudoperators] <!-- optional -->
-
-Technical Story: [description | ticket/issue URL] <!-- optional -->
+- Technical Story: [description | ticket/issue URL] <!-- optional -->
 
 ## Context and Problem Statement
 
