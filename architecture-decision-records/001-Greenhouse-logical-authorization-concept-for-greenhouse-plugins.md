@@ -1,7 +1,8 @@
-# ADR-1 Logical Authorization Concept for Greenhouse Plugins
+# 001 Logical Authorization Concept for Greenhouse Plugins
 
 - Status: accepted
 - Deciders: Fabian Ruff, Esther Schmitz, Arno Uhlig, Uwe Mayer, David Rochow
+- Date: 2024-07-14
 - Tags: greenhouse
 
 ## Context and Problem Statement
@@ -47,12 +48,14 @@ Greenhouse.
 ## Considered Options
 
 - Permission Mapping via Teams with Plugin provided Access levels
-- Permission Mapping via Teams with predefined set of Access Levels
+- Permission Mapping via Teams with a pre-defined set of Access Levels
 - Permission Mapping via Org Wide Roles
 - Permission Mapping via Greenhouse Roles
 - No permission mapping
 
 ## Decision Outcome
+
+Chosen option: **"No permission mapping"**
 
 We decided to approach the situation with a phased approach. In the first Phase of Greenhouse we go with:
 
@@ -187,4 +190,4 @@ support to provide fine-grained-access to Plugins
 
 ## Related Decision Records
 
-ADR-2 Technical Implementation of access Authorization for Greenhouse Plugins
+**002 Technical Implementation of access Authorization for Greenhouse Plugins**
