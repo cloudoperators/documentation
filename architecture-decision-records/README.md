@@ -20,7 +20,7 @@ Pre-requisites:
 npm install -g log4brains
 ```
 
-To create a new ADR interactively, run:
+**To create a new ADR interactively, run**:
 
 ```bash
 log4brains adr new
@@ -41,14 +41,25 @@ e.g. `20240101-<provided-title>.md`
 
 - Please rename the generated filename to `<number>-<component>-<provided-title>.md`.
 - The `<number>` should consists of three digits. Use leading zeros if necessary.
-- Component can be one of `greenhouse` | `cloudOperators`.
+- Component can be one of `greenhouse` | `cloudoperators`.
 
-> The `cloudOperators` component is used for ADRs of general nature.
+> The `cloudoperators` component is used for ADRs of general nature.
 
 Example:
 
 - `001-greenhouse-logical-authorization-concept-for-plugins.md`
-- `002-cloudOperators-<name>.md`
+- `002-cloudoperators-<name>.md`
+
+**Alternatively** you can use the `Makefile` command to create a new ADR without any manual renaming
+
+example:
+
+```bash
+make init TITLE=new-adr-title
+```
+This will automatically append the next index and `greenhouse` prefix for the ADR and create a new ADR file with the provided title.
+
+> NOTE: You can also override the prefix by passing PREFIX=<greenhouse | cloudoperators | ...>
 
 ## Contributing
 
