@@ -20,7 +20,7 @@ check:
 
 .PHONY: init
 init: check
-	echo "Checking for Node.js..."
+	@echo "Checking for Node.js..."
 	@command -v node >/dev/null 2>&1 || { echo >&2 "Node.js is not installed. Please install Node.js."; exit 1; }
 	@echo "Checking for log4brains..."
 	@command -v log4brains >/dev/null 2>&1 || { echo >&2 "log4brains is not installed globally. Please install it by running 'npm install -g log4brains'."; exit 1; }
