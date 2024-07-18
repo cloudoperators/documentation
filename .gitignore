@@ -1,0 +1,30 @@
+/.local/
+# Mac OS
+.DS_Store
+# IDEs and editors
+.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+# ignore vscode debug binary
+__debug_bin
+
+# ignore vscode workspaces of individual users
+*.code-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# editor and IDE paraphernalia
+*.swp
+*.swo
+*~
+*.bkp
+*.dtmp
