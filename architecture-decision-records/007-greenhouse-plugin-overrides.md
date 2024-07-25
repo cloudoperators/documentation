@@ -1,12 +1,9 @@
-# ADR-7 Plugin Option overrides
+# 007 Plugin Overrides
 
-## Decision Contributors
-
-- ...
-
-## Status
-
-- Proposed
+- Status: draft
+- Deciders: - Uwe Mayer, Richard Tief, Ivo Gosemann
+- Date: 2024-07-25
+- Tags: greenhouse
 
 ## Context and Problem Statement
 
@@ -33,7 +30,25 @@ Greenhouse should offer a way to override PluginOptionValues for a specific clus
   - Overrides should be compatible with existing Plugins
   - Overrides should be compatible with existing PluginPresets
 
-## Decision
+## Considered Options
+
+- Introduce a new CRD called `PluginOverride`
+
+## Decision Outcome
+
+### Positive Consequences <!-- optional -->
+
+- [e.g., improvement of quality attribute satisfaction, follow-up decisions required, …]
+- …
+
+### Negative Consequences <!-- optional -->
+
+- [e.g., compromising quality attribute, follow-up decisions required, …]
+- …
+
+## Pros and Cons of the Options | Evaluation of options <!-- optional -->
+
+### Introduce a new CRD called `PluginOverride`
 
 A new CRD called `PluginOverride` will be introduced. This CRD specify Overrides that are used to override PluginOptionValues for a specific cluster, for all Plugins of a certain PluginDefinition, or for all plugins in an Organization.
 
@@ -99,7 +114,45 @@ In case that two PluginOverrides specify the same value, they are applied in the
 
 Furthermore, if a Plugin/PluginPreset already specifies a value that is covered by the override, then the value will be overriden. This ensures that a PluginOverride is able change PluginOptionValues defined by a Plugin/PluginPreset. This is allows to change a value for one Plugin of a PluginPreset, while keeping the values for all others.
 
-## Consequences
+### Consequences
 
 - Changes to a PluginOptionValue in a Plugin will be overridden by the PluginOverride Operator. This means overriden values can only be changed by updating the PluginOverride.
 - Order of PluginOverrides is fixed from the most general to the most specific last. This means a PluginOverride not specifying Cluster or PluginDefinition will be applied first, and a PluginOverride specifying a Cluster and a PluginDefinition will be applied last.
+
+| Decision Driver     | Rating | Reason                        |
+|---------------------|--------|-------------------------------|
+| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
+| [decision driver b] | ---    | Good, because [argument b]    |
+| [decision driver c] | --     | Bad, because [argument c]     |
+| [decision driver d] | o      | Neutral, because [argument d] |
+
+### [option 2]
+
+[example | description | pointer to more information | …] <!-- optional -->
+
+| Decision Driver     | Rating | Reason                        |
+|---------------------|--------|-------------------------------|
+| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
+| [decision driver b] | ---    | Good, because [argument b]    |
+| [decision driver c] | --     | Bad, because [argument c]     |
+| [decision driver d] | o      | Neutral, because [argument d] |
+
+### [option 3]
+
+[example | description | pointer to more information | …] <!-- optional -->
+
+| Decision Driver     | Rating | Reason                        |
+|---------------------|--------|-------------------------------|
+| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
+| [decision driver b] | ---    | Good, because [argument b]    |
+| [decision driver c] | --     | Bad, because [argument c]     |
+| [decision driver d] | o      | Neutral, because [argument d] |
+
+## Related Decision Records <!-- optional -->
+
+[previous decision record, e.g., an ADR, which is solved by this one | next decision record, e.g., an ADR, which solves this one | … | pointer to more information]
+
+## Links <!-- optional -->
+
+- [Link type](link to adr) <!-- example: Refined by [xxx](yyyymmdd-xxx.md) -->
+- … <!-- numbers of links can vary -->
