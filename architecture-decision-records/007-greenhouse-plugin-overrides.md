@@ -33,6 +33,7 @@ Greenhouse should offer a way to override PluginOptionValues for a specific clus
 ## Considered Options
 
 - Introduce a new CRD called `PluginOverride`
+- New override fields on the CRDs `Organization` and `Cluster`
 
 ## Decision Outcome
 
@@ -112,7 +113,7 @@ Order of application of PluginOverrides(most generic first, most specific last):
 
 In case that two PluginOverrides specify the same value, they are applied in the order that the PluginOverrides were created. This means that the PluginOverride created first will be applied first.
 
-Furthermore, if a Plugin/PluginPreset already specifies a value that is covered by the override, then the value will be overriden. This ensures that a PluginOverride is able change PluginOptionValues defined by a Plugin/PluginPreset. This is allows to change a value for one Plugin of a PluginPreset, while keeping the values for all others.
+Furthermore, if a Plugin/PluginPreset already specifies a value that is covered by the override, then the value will be overridden. This ensures that a PluginOverride is able change PluginOptionValues defined by a Plugin/PluginPreset. This is allows to change a value for one Plugin of a PluginPreset, while keeping the values for all others.
 
 ### Consequences
 
@@ -147,6 +148,66 @@ Furthermore, if a Plugin/PluginPreset already specifies a value that is covered 
 | [decision driver b] | ---    | Good, because [argument b]    |
 | [decision driver c] | --     | Bad, because [argument c]     |
 | [decision driver d] | o      | Neutral, because [argument d] |
+
+
+### New override fields on the CRDs `Organization` and `Cluster`
+
+We add new fields to the existing CRDs `Organization` and `Cluster` so that they contain the specific values to be overwritten. 
+
+The order is to be assumed as follows:
+
+1. Organizational overrides
+2. Cluster overrides
+
+##### Example
+
+**Organization:**
+
+```yaml
+kind: Organization
+name: my-org
+spec:
+  pluginOverrides:
+    - path: my-option
+      value: value-override
+    - path: my-option-2
+      valueFrom:
+        secret: my-secret
+        key: my-key
+```
+
+**Cluster:**
+
+```yaml
+kind: Cluster
+name: my-cluster
+spec:
+  pluginOverrides:
+    - path: my-option
+      value: value-override
+    - path: my-option-2
+      valueFrom:
+        secret: my-secret
+        key: my-key
+
+```
+
+To do this, the HelmController must also watch the two CRDs mentioned and include the values contained under overrides in the drift detection.
+
+The following events should trigger the reconciliation:
+
+- Plugin was updated
+- PluginPreset was updated
+- Organization was updated
+- Cluster was updated
+
+As these values can also be e.g. secrets, so `valueFrom` must be supported.
+
+This solution is simple and guarantees unique values for the installation of a Helm release. Furthermore, these values can be added automatically when an organization or cluster is bootstrapped. For clusters in particular, this metadata can be obtained from any managed Kubernetes service (e.g. Gardener) or even given as an option during cluster onboarding.
+
+### Consequences
+
+- Changes to a PluginOptionValue in a Plugin are overwritten by the `organization.spec.pluginOverrides` and the `cluster.spec.pluginOverrides`. This means that overridden values can only be changed by updating the fields in the named CRDs.
 
 ## Related Decision Records <!-- optional -->
 
