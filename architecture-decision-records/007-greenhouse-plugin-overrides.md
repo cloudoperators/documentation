@@ -106,49 +106,27 @@ The order in which the PluginOverrides are applied to the Plugin are from most g
 
 Order of application of PluginOverrides(most generic first, most specific last):
 
-- PluginOptionValues from Plugin/PluginPreset
 - PluginOverrides from PluginOverride **without** Cluster or PluginDefinition
-- PluginOverrides from PluginOverride with Cluster **or** PluginDefinition
+- PluginOverrides from PluginOverride with Cluster
+- PluginOverrides from PluginOverride with PluginDefinition
 - PluginOvrrides from PluginOverride with Cluster **and** PluginDefinition
+- PluginOptionValues from Plugin/PluginPres.÷et
 
 In case that two PluginOverrides specify the same value, they are applied in the order that the PluginOverrides were created. This means that the PluginOverride created first will be applied first.
 
 Furthermore, if a Plugin/PluginPreset already specifies a value that is covered by the override, then the value will be overridden. This ensures that a PluginOverride is able change PluginOptionValues defined by a Plugin/PluginPreset. This is allows to change a value for one Plugin of a PluginPreset, while keeping the values for all others.
 
-### Consequences
+#### Consequences
 
 - Changes to a PluginOptionValue in a Plugin will be overridden by the PluginOverride Operator. This means overriden values can only be changed by updating the PluginOverride.
 - Order of PluginOverrides is fixed from the most general to the most specific last. This means a PluginOverride not specifying Cluster or PluginDefinition will be applied first, and a PluginOverride specifying a Cluster and a PluginDefinition will be applied last.
 
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
-| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
-| [decision driver b] | ---    | Good, because [argument b]    |
-| [decision driver c] | --     | Bad, because [argument c]     |
-| [decision driver d] | o      | Neutral, because [argument d] |
-
-### [option 2]
-
-[example | description | pointer to more information | …] <!-- optional -->
-
-| Decision Driver     | Rating | Reason                        |
-|---------------------|--------|-------------------------------|
-| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
-| [decision driver b] | ---    | Good, because [argument b]    |
-| [decision driver c] | --     | Bad, because [argument c]     |
-| [decision driver d] | o      | Neutral, because [argument d] |
-
-### [option 3]
-
-[example | description | pointer to more information | …] <!-- optional -->
-
-| Decision Driver     | Rating | Reason                        |
-|---------------------|--------|-------------------------------|
-| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
-| [decision driver b] | ---    | Good, because [argument b]    |
-| [decision driver c] | --     | Bad, because [argument c]     |
-| [decision driver d] | o      | Neutral, because [argument d] |
-
+| Additional CRD |  0  | One place to configure overrides, but additional complexity due to another API object.    |                                                                                                                                                                                                                                                                | 
+| Flexibility | ++    | Good, because overrides can be done for Org, Cluster, PluginDefinition & Plugin Level    |
+| Complexity | --     | Bad, because it is not immediately obvious which objects will be affected by the override.   |
+| Configuration Effort | ++ | Good, because the different levels of overrides allow for a fine-grained configuration for a list of clusters, while only touching one CRD.   |
 
 ### New override fields on the CRDs `Organization` and `Cluster`
 
@@ -159,7 +137,7 @@ The order is to be assumed as follows:
 1. Organizational overrides
 2. Cluster overrides
 
-##### Example
+#### Example
 
 **Organization:**
 
@@ -205,9 +183,30 @@ As these values can also be e.g. secrets, so `valueFrom` must be supported.
 
 This solution is simple and guarantees unique values for the installation of a Helm release. Furthermore, these values can be added automatically when an organization or cluster is bootstrapped. For clusters in particular, this metadata can be obtained from any managed Kubernetes service (e.g. Gardener) or even given as an option during cluster onboarding.
 
-### Consequences
+#### Consequences
 
 - Changes to a PluginOptionValue in a Plugin are overwritten by the `organization.spec.pluginOverrides` and the `cluster.spec.pluginOverrides`. This means that overridden values can only be changed by updating the fields in the named CRDs.
+
+
+[example | description | pointer to more information | …] <!-- optional -->
+
+| Decision Driver     | Rating | Reason                        |
+|---------------------|--------|-------------------------------|
+| RBAC Roles | --    | Bad, because there are currently different RBAC roles for OrgAdmin, ClusterAdmins, PluginAdmins. A PluginAdmin is not able to change Organization or Cluster resources. Also, it is not possible to restrict via RBAC that only changes to the `pluginOverrides` are allowed.    |                                                                                                                                                                                                                                                                | 
+| Simplicity | ++    | Good, because it is clear where the overrides for a Cluster, Organization are performed.   |
+| Configuration | --     | Bad, because it is limited to override the values for all Plugins in a Org/Cluster. Shared helm value path between Charts can be a problem.   |
+| Configuration Effort | -      | Bad, because adding/ changing an override for all clusters means each Cluster object needs to be touched.|
+
+### [option 3]
+
+[example | description | pointer to more information | …] <!-- optional -->
+
+| Decision Driver     | Rating | Reason                        |
+|---------------------|--------|-------------------------------|
+| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
+| [decision driver b] | ---    | Good, because [argument b]    |
+| [decision driver c] | --     | Bad, because [argument c]     |
+| [decision driver d] | o      | Neutral, because [argument d] |
 
 ## Related Decision Records <!-- optional -->
 
