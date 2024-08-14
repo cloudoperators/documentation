@@ -175,3 +175,56 @@ flowchart LR
 * additional operational complexity
 * consumers may rely on the interconnectivity solution for other applications then greenhouse increasing blast radius of potential misconfigurations 
 * additional security risk for consumers as interconnected clusters potentially allow attackers to move between remote clusters
+
+### Option 3: Greenhouse Cluster per Organization
+
+```mermaid
+
+flowchart LR
+ subgraph CentralClusterOrgA["Central Cluster Org A"]
+        adminPluginOrgA["Admin Plugin"]
+ end
+ subgraph CentralClusterOrgB["Central Cluster Org B"]
+        adminPluginOrgB["Admin Plugin"]
+        centralVPNPod["VPN Pod"]
+        adminPluginOrgB --> centralVPNPod
+ end
+ subgraph Cluster1["Cluster 1"]
+    direction LR
+        c1API["Remote Plugin"]
+  end
+ subgraph Cluster2["Cluster 2"]
+    direction LR
+        c2API["Remote Plugin"]
+  end
+ subgraph Cluster3["Cluster 3"]
+    direction LR
+        c3VPNPod["VPN Pod"]
+        c3API["Remote Plugin"]
+        c3VPNPod --> c3API
+  end    
+    userOrgA["Org A User"] -. Via Greenhouse .-> adminPluginOrgA
+    userOrgB["Org B User"] -. Via Greenhouse .-> adminPluginOrgB
+    adminPluginOrgA -. Direct Access .-> c1API & c2API
+    centralVPNPod -. Wireguard Tunnel .-> c3VPNPod
+```
+
+- Each organization has their own central cluster, owned and operated by them
+- Greenhouse (eventually) also provides a Managed Greenhouse Central Cluster
+- Admin plugins are allowed in the central cluster, and may be configured by the organization
+- Access to previously shared Greenhouse components possible
+
+#### Pros
+
+- Organization can choose a suitable network zone for their central cluster, allowing for direct access to Clusters
+- No dependencies between Orgs on AdminPlugin updates due to CRD changes
+- Organization can configure AdminPlugins to their needs
+- Access to Greenhouse Logs & Metrics available
+- No shared costs that are not billable to the organization
+- Can be run on a trial period to evaluate the concept, as this can be reverted into the current state if needed
+
+#### Contra
+
+- Harder to support Organizations without access to their Greenhouse Central Cluster
+- No longer a OOB solution for Organizations
+- Increased operation complexity for Organizations
