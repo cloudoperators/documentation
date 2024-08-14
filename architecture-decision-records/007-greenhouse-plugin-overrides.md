@@ -1,8 +1,8 @@
 # 007 Plugin Overrides
 
 - Status: draft
-- Deciders: - Uwe Mayer, Richard Tief, Ivo Gosemann
-- Date: 2024-07-25
+- Deciders: - Akshay Iyyadurai Balasundaram, Arno Uhlig, Richard Tief, Tommy Sauer, Uwe Mayer, Ivo Gosemann
+- Date: 2024-08-14
 - Tags: greenhouse
 
 ## Context and Problem Statement
@@ -34,18 +34,25 @@ Greenhouse should offer a way to override PluginOptionValues for a specific clus
 
 - Introduce a new CRD called `PluginOverride`
 - New override fields on the CRDs `Organization` and `Cluster`
+- Additonal `ClusterOptionOverrides` Field on PluginPreset
 
 ## Decision Outcome
 
+Chosen option: "Additonal `ClusterOptionOverrides` Field on PluginPreset", because it is the simplest solution and allows for a fine-grained configuration for a list of clusters, while only touching one CRD.
+This solves the underlying problem which we are facing with the current implementation of PluginPresets.
+
 ### Positive Consequences <!-- optional -->
 
-- [e.g., improvement of quality attribute satisfaction, follow-up decisions required, …]
-- …
+- one place to configure the PluginPreset's PluginSpec and also the Overrides
+- no additional CRD required
+- no additional RBAC roles required
+- no added complexity to finding out which objects will be affected by the override
+- no added complexity to finding out why a Plugin has a certain configuration
+- implementation is compatible with all existing PluginPresets/Plugins
 
 ### Negative Consequences <!-- optional -->
 
-- [e.g., compromising quality attribute, follow-up decisions required, …]
-- …
+- This solves the problem only for PluginPresets, but not for general defaulting on Cluster or Organization level
 
 ## Pros and Cons of the Options | Evaluation of options <!-- optional -->
 
@@ -116,6 +123,69 @@ In case that two PluginOverrides specify the same value, they are applied in the
 
 Furthermore, if a Plugin/PluginPreset already specifies a value that is covered by the override, then the value will be overridden. This ensures that a PluginOverride is able change PluginOptionValues defined by a Plugin/PluginPreset. This is allows to change a value for one Plugin of a PluginPreset, while keeping the values for all others.
 
+```mermaid
+---
+title: PluginPreset with PluginOverride CRD
+---
+flowchart
+
+  subgraph organizationOverride[PluginOverride]
+    organizationOverrides[PluginOverrides]
+  end
+
+  subgraph clusterOverride[PluginOverride]
+    clusterOverrideClusterSelector[ClusterSelector]
+    clusterOverrides[PluginOverrides]
+  end
+
+  subgraph pluginDefinitionOverride[PluginOverride]
+    pluginDefinitionName[PluginDefinition]
+    pluginDefinitionOverrides[PluginOverrides]
+  end
+
+  subgraph clusterDefinitionOverride[PluginOverride]
+    clusterDefinitionOverrideDefinitionName[PluginDefinition]
+    clusterDefinitionOverrideClusterSelector[ClusterSelector]
+    clusterDefinitionOverrides[PluginOverrides]
+  end
+
+  subgraph pluginDefinition[PluginDefinition]
+    pluginDefinitionDefaults[PluginOptions]
+  end
+
+  subgraph PluginPreset
+    pluginPresetSpec[PluginOptionValues]
+  end
+
+  cluster[Cluster]
+
+  subgraph plugin[Plugin]
+    pluginClusterName[ClusterName]
+    pluginPluginDefinition[PluginDefinition]
+    pluginSpec[PluginOptionValues]
+  end
+
+organizationOverrides --[Third]--> pluginSpec
+
+clusterOverrideClusterSelector .- cluster
+clusterOverrides --[Fifth]--> pluginSpec
+
+clusterDefinitionOverrideDefinitionName .- pluginDefinition
+clusterDefinitionOverrideClusterSelector .- cluster
+clusterDefinitionOverrides --[Sixth]--> pluginSpec
+
+pluginDefinitionOverrides --[Fourth]--> pluginSpec
+
+pluginDefinitionDefaults --[First]--> pluginSpec
+
+pluginPresetSpec --[Second]--> pluginSpec
+
+pluginDefinition .- pluginPluginDefinition
+
+pluginPluginDefinition .- pluginDefinition
+pluginClusterName .- cluster
+```
+
 #### Consequences
 
 - Changes to a PluginOptionValue in a Plugin will be overridden by the PluginOverride Operator. This means overriden values can only be changed by updating the PluginOverride.
@@ -183,12 +253,42 @@ As these values can also be e.g. secrets, so `valueFrom` must be supported.
 
 This solution is simple and guarantees unique values for the installation of a Helm release. Furthermore, these values can be added automatically when an organization or cluster is bootstrapped. For clusters in particular, this metadata can be obtained from any managed Kubernetes service (e.g. Gardener) or even given as an option during cluster onboarding.
 
+```mermaid
+---
+title: PluginPreset with PluginOverrides on Organization and Cluster
+---
+flowchart LR
+
+  subgraph Organization
+    organizationOverrides[PluginOverrides]
+  end
+
+  subgraph Cluster
+    clusterOverrides[PluginOverrides]
+  end
+
+  subgraph PluginDefinition
+    pluginDefinitionDefaults[PluginOptions]
+  end
+
+  subgraph PluginPreset
+    pluginPresetSpec[PluginOptionValues]
+  end
+
+  subgraph Plugin
+    pluginSpec[PluginOptionValues]
+  end
+
+organizationOverrides -- Applied third --> pluginSpec
+clusterOverrides -- Applied fourth --> pluginSpec
+pluginDefinitionDefaults -- Applied second --> pluginSpec
+pluginPresetSpec -- Applied first --> pluginSpec
+```
+
 #### Consequences
 
 - Changes to a PluginOptionValue in a Plugin are overwritten by the `organization.spec.pluginOverrides` and the `cluster.spec.pluginOverrides`. This means that overridden values can only be changed by updating the fields in the named CRDs.
 
-
-[example | description | pointer to more information | …] <!-- optional -->
 
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
@@ -197,16 +297,69 @@ This solution is simple and guarantees unique values for the installation of a H
 | Configuration | --     | Bad, because it is limited to override the values for all Plugins in a Org/Cluster. Shared helm value path between Charts can be a problem.   |
 | Configuration Effort | -      | Bad, because adding/ changing an override for all clusters means each Cluster object needs to be touched.|
 
-### [option 3]
+### Additonal `ClusterOptionOverrides` Field on PluginPreset
 
-[example | description | pointer to more information | …] <!-- optional -->
+This option would introduce a new field on the PluginPreset CRD spec. The field could be called `ClusterOptionOverrides` and brings a list of clusters with overrides in the form of PluginOptionValues.
+This allows to specify values specific to a particular Clusters from the list of matching the Plugin Preset's ClusterSelector.
+
+The PluginPreset spec needs to be extented with the new field as such:
+
+```golang
+type ClusterOptionOverride struct {
+  ClusterName string `json:"clusterName"`
+  Overrides []PluginOptionValue `json:"overrides"`
+}
+```
+
+```yaml
+kind: PluginPreset
+name: my-preset
+spec:
+  plugin:
+    optionValues:
+      - name: my-option
+        value: value-default
+    pluginDefinitionName: my-plugindefinition
+    releaseNamespace: my-namespace
+  clusterOptionOverrides:
+    - clusterName: my-cluster
+      overrides: 
+        - name: my-option
+          value: value-override
+```
+
+```mermaid
+---
+title: PluginPreset with ClusterOptionOverrides
+---
+flowchart LR
+
+  subgraph PluginPreset
+    pluginPresetSpec[PluginOptionValues]
+    clusterOptionOverrides[ClusterOptionOverrides]
+    clusterOptionOverrides --> pluginPresetSpec
+  end
+
+  subgraph PluginDefinition
+    pluginDefinitionDefaults[PluginOptions]
+  end
+
+  subgraph Plugin
+    pluginSpec[PluginOptionValues]
+  end
+
+pluginDefinitionDefaults -- Defaults --> pluginSpec
+pluginPresetSpec -- Creates Spec --> pluginSpec
+```
+
 
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
-| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
-| [decision driver b] | ---    | Good, because [argument b]    |
-| [decision driver c] | --     | Bad, because [argument c]     |
-| [decision driver d] | o      | Neutral, because [argument d] |
+| Simplicity | +++    | Good, because it is one place to edit and to look for overrides.    |                                                                                                                                                                                                                                                                | 
+| Complexity | ++    | Good, because its an existing CRD and no additonal RBAC required    |
+| Transparency | ++     | Good, because there is just one place where the optionValues for a PluginPreset and all created Plugins are specified.     |
+| Compatibility | +      | Good, because this is compatible with all existing PluginPresets/Plugins |
+| Feature completeness | - | Bad, because it does not solve general defaulting on Cluster or Organization level. |
 
 ## Related Decision Records <!-- optional -->
 
