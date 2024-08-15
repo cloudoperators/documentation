@@ -1,9 +1,10 @@
 # 007 Plugin Overrides
 
-- Status: draft
+- Status: accepted
 - Deciders: - Akshay Iyyadurai Balasundaram, Arno Uhlig, Richard Tief, Tommy Sauer, Uwe Mayer, Ivo Gosemann
-- Date: 2024-08-14
+- Date: 2024-08-15
 - Tags: greenhouse
+- Technical Story: [greenhouse#84](https://github.com/cloudoperators/greenhouse/issues/84)
 
 ## Context and Problem Statement
 
@@ -72,8 +73,8 @@ The Clusters relevant for the override should be determined by the ClusterSelect
 ```golang
 type ClusterSelector struct{
   LabelSelector * metav1.LabelSelector `json:"labelSelector,omitempty"`
-  ClusterNames []string `json:"clusterNames,omitempty"`
-  IgnoreClusters []string `json:"ignoreClusters,omitempty"`
+  IncludeClusterNames []string `json:"includeClusterNames,omitempty"`
+  ExcludeClusterNames []string `json:"excludeClusterNames,omitempty"`
 }
 ```
 
@@ -95,7 +96,7 @@ spec:
 
 The overrides specified by the PluginOverride must be unique. This means that it is not possible to specify two overrides for the same path and different values. The validation should be done by a validating webhook.
 
-There is a central override component, which is able to retrieve the list of relevant overrides for a Plugin. This component will be called from the PluginPresetController during reconciliation of the individual Plugins.
+There is a central override component, which is able to retrieve the list of relevant overrides for a Plugin. This piece of code will be called from the PluginPresetController during reconciliation of the individual Plugins.
 Overrides for Plugins not managed by a PluginPreset will be applied by a separate controller.
 
 The PluginPresetController and the PluginOverrideController should watch for changes to relevant PluginOverrides and update the respective PluginSpec
