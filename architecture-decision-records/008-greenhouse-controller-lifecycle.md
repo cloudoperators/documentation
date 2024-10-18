@@ -91,7 +91,7 @@ func (r *RemoteClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 > Note: If no statusFunc is passed then `lifecycle` package will set default status based on the result of `EnsureCreated`.
 
-The `EnsureCreated` and `EnsureDeleted` methods should be implemented in the controller so that the `Reconcile` function can call them.
+The `EnsureCreated` and `EnsureDeleted` methods should be implemented in the controller so that the `Reconcile` function can invoke them.
 
 ```go
 func (r *RemoteClusterReconciler) EnsureCreated(ctx context.Context, resource lifecycle.RuntimeObject) (ctrl.Result, lifecycle.ReconcileResult, error) {
