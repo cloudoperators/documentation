@@ -1,0 +1,103 @@
+# 011-greenhouse-plugin-options-structure
+
+- Status: [draft ] <!-- optional -->
+- Deciders: [Uwe, Ivo, Esther, Andreas] <!-- optional -->
+- Date: [YYYY-MM-DD when the decision was last updated] <!-- optional. To customize the ordering without relying on Git creation dates and filenames -->
+- Tags: [greenhouse / cloudoperators] <!-- optional -->
+- Technical Story: [description | ticket/issue URL] <!-- optional -->
+
+## Context and Problem Statement
+
+Some plugins require or allow a lot of configuration options which are currently kubernetes CRD style situated in deeply nested object structures.
+We auto generate the edit screens for the plugins and the deep nesting makes the forms hard to read and use.
+Examples:
+
+- `kubeMonitoring.prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage`
+- `kubeMonitoring.prometheus.annotations.nginx\.ingress\.kubernetes\.io/auth-tls-secret`
+  where the yaml is like
+
+  ```yaml
+  kubeMonitoring:
+    prometheus:
+      annotations:
+        nginx.ingress.kubernetes.io/auth-tls-secret: namespace/secret
+  ```
+
+The goal of this ADR is to find a way to automatically structure these config options better.
+
+**Discussion:**
+
+- configure display names for the mandatory/important config options
+- flat structure in config map that maps to the nested structure
+
+## Decision Drivers <!-- optional -->
+
+- [driver 1, e.g., a force, facing concern, …]
+- [driver 2, e.g., a force, facing concern, …]
+- … <!-- numbers of drivers can vary -->
+
+## Considered Options
+
+- [option 1]
+- [option 2]
+- [option 3]
+- … <!-- numbers of options can vary -->
+
+## Decision Outcome
+
+Chosen option: "[option 1]",
+because [justification. e.g., only option, which meets k.o. criterion decision driver | which resolves force force | … | comes out best (see below)].
+
+### Positive Consequences <!-- optional -->
+
+- [e.g., improvement of quality attribute satisfaction, follow-up decisions required, …]
+- …
+
+### Negative Consequences <!-- optional -->
+
+- [e.g., compromising quality attribute, follow-up decisions required, …]
+- …
+
+## Pros and Cons of the Options | Evaluation of options <!-- optional -->
+
+### [option 1]
+
+[example | description | pointer to more information | …] <!-- optional -->
+
+| Decision Driver     | Rating | Reason                        |
+|---------------------|--------|-------------------------------|
+| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
+| [decision driver b] | ---    | Good, because [argument b]    |
+| [decision driver c] | --     | Bad, because [argument c]     |
+| [decision driver d] | o      | Neutral, because [argument d] |
+
+### [option 2]
+
+[example | description | pointer to more information | …] <!-- optional -->
+
+| Decision Driver     | Rating | Reason                        |
+|---------------------|--------|-------------------------------|
+| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
+| [decision driver b] | ---    | Good, because [argument b]    |
+| [decision driver c] | --     | Bad, because [argument c]     |
+| [decision driver d] | o      | Neutral, because [argument d] |
+
+### [option 3]
+
+[example | description | pointer to more information | …] <!-- optional -->
+
+| Decision Driver     | Rating | Reason                        |
+|---------------------|--------|-------------------------------|
+| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
+| [decision driver b] | ---    | Good, because [argument b]    |
+| [decision driver c] | --     | Bad, because [argument c]     |
+| [decision driver d] | o      | Neutral, because [argument d] |
+
+## Related Decision Records <!-- optional -->
+
+[previous decision record, e.g., an ADR, which is solved by this one | next decision record, e.g., an ADR, which solves this one | … | pointer to more information]
+
+## Links <!-- optional -->
+
+- [Link type](link to adr) <!-- example: Refined by [xxx](yyyymmdd-xxx.md) -->
+- … <!-- numbers of links can vary -->
