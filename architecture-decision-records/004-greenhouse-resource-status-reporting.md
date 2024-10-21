@@ -1,6 +1,6 @@
 # 004 Greenhouse Resource States
 
-- Status: proposed
+- Status: proposed | partially superseded by [008 Greenhouse Controller Lifecycle](008-greenhouse-controller-lifecycle.md)
 - Deciders: Ivo Gosemann, Uwe Mayer
 - Date: 2023-12-18
 - Tags: greenhouse
