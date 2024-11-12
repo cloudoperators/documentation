@@ -49,7 +49,8 @@ The `Reconciler` interface will have the following methods `EnsureCreated` and `
 https://github.com/cloudoperators/greenhouse/blob/bb57e128014102f963c9879ef78af80bc1820bd4/pkg/lifecycle/reconcile.go#L58-L62
 
 `Reconcile` - is a generic function that is used to reconcile the state of a resource
-It standardizes the reconciliation loop and provides a common way to set finalizers, remove finalizers, and update the status of the resource
+It standardizes the reconciliation loop and provides a common way to set finalizers, remove finalizers, and update the status of the resource.
+At the start of the reconciliation loop, the original object is stored in `context` to update the status of the resource at the end of the reconciliation.
 
 It splits the reconciliation into two phases, `EnsureCreated` and `EnsureDeleted` to keep the `create / update` and `delete` logic in controllers segregated
 
