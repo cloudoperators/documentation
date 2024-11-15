@@ -36,7 +36,25 @@ Discuss a pragmatic approach and define a POC.
 
 ## Considered Options
 
-- [option 1]
+### Argo Rollouts (Not viable ❌)
+
+Description: A Kubernetes controller and set of CRDs for advanced deployment capabilities including canary deployments, blue-green deployments, and progressive delivery features.
+
+| Decision Driver           | Rating | Reason                                                                                           |
+|--------------------------|--------|--------------------------------------------------------------------------------------------------|
+| Multi-cluster Management | ---    | Cannot manage rollouts from central cluster; requires controller in every remote cluster          |
+| Operational Complexity   | --     | High complexity due to required installation in each cluster                                      |
+| Integration Capabilities | +      | Good integration with Kubernetes workloads but requires significant architecture changes          |
+| Flexibility             | +++    | Excellent support for various deployment strategies                                               |
+| Monitoring              | +++    | Strong metrics-based analysis and verification                                                    |
+
+Key Limitation: Argo Rollouts cannot be used in a centralized manner. [As per their documentation](https://argoproj.github.io/argo-rollouts/FAQ/#can-we-install-argo-rollouts-centrally-in-a-cluster-and-manage-rollout-resources-in-external-clusters), the Rollout controller and CRDs must be installed in every target cluster where progressive delivery is needed. This architectural limitation makes it unsuitable for our centralized plugin management approach, as it would:
+
+1. Significantly increase operational overhead by requiring installation and management in every target cluster
+2. Complicate our existing centralized plugin management architecture using the plugin controller
+3. Add unnecessary complexity to the current plugin controller's responsibilities
+Due to these limitations, especially the inability to manage rollouts from a central cluster, this option is not viable for our use case.
+
 - [option 2]
 - [option 3]
 - … <!-- numbers of options can vary -->
