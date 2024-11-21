@@ -15,7 +15,7 @@ Discuss a pragmatic approach and define a POC.
 **Discussion:**
 
 - Plugin on the greenhouse-extensions.git main branch must be production ready
-- Get inspiration from Gardener to inform customer "Upcoming changes in plugin ..." with a grace period. Force upgrade afterwards.
+- Get inspiration from Gardener to inform customer "Upcoming changes in plugin ..." with a grace period and let him update for testing. Force upgrade afterwards.
 - Classify cluster
 - Stable API with migration paths
 - Follow engineering policy: Bronze, Silver, Gold with grace period in between.
