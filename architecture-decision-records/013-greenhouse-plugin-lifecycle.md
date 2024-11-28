@@ -54,7 +54,8 @@ The goal of this ADR is to define a concept that allows:
 
 - Argo Rollouts (Not viable ❌)
 - PluginPreset as the Orchestrator for Plugins
-- [option 3]
+- FluxCD
+- [option 4]
 - … <!-- numbers of options can vary -->
 
 ## Decision Outcome
@@ -209,8 +210,25 @@ Maybe only offer to set the time window to a day of week/time to have the possib
 | [decision driver c] | --     | Bad, because [argument c]     |
 | [decision driver d] | o      | Neutral, because [argument d] |
 
+### Flux
 
-### [Pluginoption 3]
+This is a tool that can orchestrate resources from a central plane. It does not require any CRDs in remote planes, it integrates nicely with amongst others Helm and Kustomise. Using the tool [Flagger.app](https://flagger.app), various deployment strategies can be utilised.
+
+|<div style="width:200px"> Decision Driver </div>    | Rating | Reason |
+|---------------------|--------|-------------------------------|
+| Multi-tenancy (Admin-remote cluster management) | +++ | This tool is natievly supporting [multi-tenancy](https://fluxcd.io/flux/installation/configuration/multitenancy/). |
+| HelmRelease trigger  | ++ | FluxCD [can fetch and listen](https://fluxcd.io/flux/components/helm/) for new Helm releases and automatically roll-them out. |
+| GitOps support | + | Rolling out with e.g. Github Actions is [possible](https://fluxcd.io/flux/use-cases/gh-actions-helm-promotion/). |
+| No CRDs in remote-clusters | ++ | [At a brief glance](https://fluxcd.io/flux/installation/configuration/multitenancy/), FluxCD [seems](https://github.com/fluxcd/flux2-hub-spoke-example) to not require CRDs/resources in remote-clusters for Helm related installs only the admin-cluster requires CRDs e.g. the so-called 'HelmRelease'. However, it is not clear whether Flagger or with e.g. Kustomize requires CRDs in remote-clusters. |
+| Deployment strategies (Flagger) | + | [Docs](https://docs.flagger.app/install/flagger-install-with-flux) |
+| Scope in restructuring the roll-out | -- | To integrate Flux properly, and possibly Flagger, there will be an overhead in restructuring the logic. |
+| Added complexity | -- | This tool would bring additional complexity (in the sense of integration efforts, dependency managment, customisation etc) to our landscape.† |
+| Kustomize roll-out of PluginDefintions | ? | Using Kustomize to roll-out PluginDef updates could control version updates on PluginDefs. Could require some refactoring and introduce complexity in the Plugin authoring. |
+
+> † The task of a controlled and high-quality roll-out managment is arguably a complex task, so this might be unavoidable.
+
+
+### [option 4]
 
 [example | description | pointer to more information | …] <!-- optional -->
 
