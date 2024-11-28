@@ -21,11 +21,14 @@ The goal of this ADR is to define a concept that allows:
 
 - to stage the rollout of new PluginDefinition versions
 - to allow pinning of PluginDefinition versions for Plugins
-- to allow multiple versions of a PluginDefinition to be availalbe in a Cluster
+- to allow multiple versions of a PluginDefinition to be available in a Cluster
 - to provide more insights into the PluginDefinition changes to the customer
   - Changelog for the PluginDefinition?
   - Migration tasks for the PluginDefinition?
   - Helm Diff for the Plugin?
+- Introduce a concept of tiers for clusters, to stage rollouts of Plugins
+- Introduce a Plugin Lifecycle Policy
+- There must be a way to handle breaking changes due to Plugin updates
 
 **Discussion:**
 
@@ -38,10 +41,6 @@ The goal of this ADR is to define a concept that allows:
 - Emergency fixes should be possible
 - How to handle failed upgrades: rollback vs forward fix (tendency: forward fix)
 
-**Goal:**
-
-- Introduce a concept of tiers for clusters, to stage rollouts of Plugins
-- Introduce a Plugin Lifecycle Policy
 
 ## Decision Drivers <!-- optional -->
 
@@ -177,7 +176,41 @@ hc-controller --deploys--> c-prod
 | [decision driver c] | --     | Bad, because [argument c]     |
 | [decision driver d] | o      | Neutral, because [argument d] |
 
-### [option 3]
+
+### [PluginPreset as Orchestrator with support for Breaking changes / update opt-in/out]
+
+[example | description | pointer to more information | …] <!-- optional -->
+
+Description: Like PlugionPreset Orchestrator idea above with more features for the sake of customer happiness.
+
+#### Breaking changes
+There needs to be a flag or sth to block a plugin rollout automatically from master, if a breaking change is introduced.
+
+In case there are blockers for rolling out automatically there need to be a blocker flag / label which will prohibit the rollout of newer versions to customer clusters.
+
+Customers need to made aware that an update is pending (notification via UI (alert bell?)/Slack) and that they have to actively migrate.
+
+* Introduce a timer counting backwards in the UI
+* Introdcue alerts
+    * we need to export this as a metric if there are pending updates
+
+#### Update windows
+
+Customers will usually rarely update and the amount of different plugin versions should be rather minimal. However the updates should never be rolled out without the customer being aware of it. 
+
+Idea: introduce update windows which are mandatory to set either globally or on a per plugin base. Could be in a cronjob style manner. The Controller will only attempt to update Plugins during given window.
+Maybe only offer to set the time window to a day of week/time to have the possibility of updating at least weekly.
+
+
+| Decision Driver     | Rating | Reason                        |
+|---------------------|--------|-------------------------------|
+| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
+| [decision driver b] | ---    | Good, because [argument b]    |
+| [decision driver c] | --     | Bad, because [argument c]     |
+| [decision driver d] | o      | Neutral, because [argument d] |
+
+
+### [Pluginoption 3]
 
 [example | description | pointer to more information | …] <!-- optional -->
 
