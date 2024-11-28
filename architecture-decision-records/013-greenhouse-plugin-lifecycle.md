@@ -227,6 +227,116 @@ This is a tool that can orchestrate resources from a central plane. It does not 
 
 > † The task of a controlled and high-quality roll-out managment is arguably a complex task, so this might be unavoidable.
 
+The crucial point of using Flux however is to create a strategy for rolling out to specific clusters in a controlled way. The multi-tennancy only gets us _that_ far, to promote specific clusters at a given time requires some control. Possibly through manual intervention, see discussions about this [here](https://github.com/fluxcd/flux2/issues/611).
+
+#### As a flowchart
+
+```mermaid
+flowchart LR
+  subgraph firstApproval
+    Author --> Plugin
+    Plugin --> PR
+    codeOwner["Code Owner"]
+    codeOwner --> PR
+    Action["GitHub Action\: Deploy new Helm Chart"]
+    PR --> Action
+    HelmChart["New published Helm chart, vX.Y.Z"]
+    Action --> HelmChart
+    flux --> HelmChart
+
+    subgraph qaClusuter [QA Clusters]
+    q1["QA-1"]
+    q2["QA-2"]
+    q3["QA-3"]
+    q4["QA-4"]
+    end
+
+    subgraph AdminCluster
+    flux --> q1
+    flux --> q2
+    flux --> q3
+    flux --> q4
+    end
+  end
+
+  subgraph secondApproval
+    subgraph bronzeCluster [Bronze Clusters]
+    b1["Bronze-1"]
+    b2["Bronze-2"]
+    b3["Bronze-3"]
+    b4["Bronze-4"]
+    end
+
+    subgraph silverCluster [Silver Clusters]
+    s1["Silver-1"]
+    s2["Silver-2"]
+    s3["Silver-3"]
+    s4["Silver-4"]
+    end
+
+    subgraph goldCluster [Gold Clusters]
+    G1["Gold-1"]
+    G2["Gold-2"]
+    G3["Gold-3"]
+    G4["Gold-4"]
+    end
+  end
+
+  flux --> app@{ shape: diamond, label: "Approval Process" }
+  productionApprover["Approver for Production"]
+  productionApprover --> app
+
+  app --> bronzeCluster
+  app --> silverCluster
+  app --> goldCluster
+
+```
+
+
+#### As a sequence diagram
+```mermaid
+sequenceDiagram
+box firstApproval First Approval
+  actor Author as Plugin Author
+  participant PR as Pull Request with new changes
+  actor codeOwner as Code Owner
+  participant Action as GitHub Action
+  participant HelmChart as Helm Package Registry
+  participant flux as Admin cluster running Flux
+
+  participant qa as QA Clusters
+end
+
+  Author->>+ PR: Author creats a PR
+  codeOwner ->> PR: Approval cycle
+  PR ->>- Author: PR is Approved
+  Author ->> PR: Merges PR
+  PR ->> Action: GitHub Action Deploy new Helm Chart
+
+  Action ->> HelmChart: Deploys a new Helm Chart vX.Y.Z
+  flux ->> HelmChart: Polls Helm Package registry for a new version
+  
+  flux ->> qa: Roll out new helm release to Q1,Q2,QX
+  
+  box secondApproval
+    actor approver as Approver
+    participant app as Approval Process
+  
+    participant bronze as Bronze Clusters
+    participant silver as Silver Clusters
+    participant gold as Gold Clusters
+  end
+  
+
+  note right of approver: The approver will press the production<br/>roll-out button to fire it away.
+  note right of app: The process should allow<br/>for a controlled process.<br/>For example merge to a<br/>specific branch, a specific<br/>semver or some other identifier‡
+  approver ->> app: A person approves the roll out to production
+  flux ->> bronze: Roll out new helm release to Bronze 1,2,X...
+  flux ->> silver: Roll out new helm release to Silver 1,2,X...  
+  flux ->> gold: Roll out new helm release to Gold 1,2,X...
+```
+
+> ‡ For instance promoting using [an action and PR](https://fluxcd.io/flux/use-cases/gh-actions-helm-promotion/#define-the-promotion-github-workflow)
 
 ### [option 4]
 
