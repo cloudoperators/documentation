@@ -227,7 +227,7 @@ This is a tool that can orchestrate resources from a central plane. It does not 
 
 > † The task of a controlled and high-quality roll-out managment is arguably a complex task, so this might be unavoidable.
 
-The crucial point of using Flux however is to create a strategy for rolling out to specific clusters in a controlled way. The multi-tennancy only gets us _that_ far, to promote specific clusters at a given time requires some control. Possibly through manual intervention, see discussions about this [here](https://github.com/fluxcd/flux2/issues/611).
+**The crucial point** of using Flux however is to create a strategy for rolling out to specific clusters in a controlled way. The multi-tennancy only gets us _that_ far, to promote specific clusters at a given time requires some control. Possibly through manual intervention, see discussions about this [here](https://github.com/fluxcd/flux2/issues/611).
 
 #### As a flowchart
 
@@ -238,7 +238,7 @@ flowchart LR
     Plugin --> PR
     codeOwner["Code Owner"]
     codeOwner --> PR
-    Action["GitHub Action\: Deploy new Helm Chart"]
+    Action["GitHub Action, Deploy new Helm Chart"]
     PR --> Action
     HelmChart["New published Helm chart, vX.Y.Z"]
     Action --> HelmChart
