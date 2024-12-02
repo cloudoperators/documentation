@@ -8,8 +8,9 @@
 
 ## Context and Problem Statement
 
-PluginDefintions are used within Greenhouse to deploy and configure operational tools. Some of these are intended to be deployed by the Organization into their Namespace in the Greenhouse Central cluster.
-The Plugins that are allowed to be deployed into the Central Cluster should be limited to a set of approved Plugins. Furthermore, the configuration of these Plugins should be limited. This is to ensure, that an Organization cannot deploy Plugins that could negatively impact other tenants on the same cluster.
+Within Greenhouse Plugins are used to deploy and configure operational tools. Some of these tools need to be run in the namespace of an Organization in the Central Cluster.
+The list of Plugins that are allowed to be deployed into the Central Cluster should be limited. Only the administrators of the Greenhouse instance should be allowed to deploy any such Admin Plugins.
+The configuration of these Plugins should be limited to ensure that the Organization cannot deploy Plugins that could negatively impact other tenants on the same cluster.
 
 ## Decision Drivers <!-- optional -->
 
@@ -61,16 +62,22 @@ A PluginDefinition with `deploymentScope` set to `central` must have limited con
 | Enforced Compliance | o     | Neutral, because this depends on the underlying Helm Chart and the allowed PluginOptions. |
 | UI Integration | ++      | Good, because the API objects are the same. |
 
-### [option 2]
+### AdminPluginDefinition & AdminPlugin
 
-[example | description | pointer to more information | …] <!-- optional -->
+Complete separation between Plugins that can be deployed into the Central Cluster and those that are deployed to remote clusters.
+
+This allows to further restrict the access to these resources, so that the audience for Plugins/PluginDefinitions and AdminPlugin/AdminPluginDefinition can be disjunct.
+
+The CRD can be largely similar, but the underlying controller much simpler as it must not handle both use-cases (central & remote deployments). This also allows to easily restrict to only setting those OptionValues in the AdminPlugin that are defined by the AdminPluginDefinition.
+
+This could also imply that only AdminPluginDefinitions can define a UI application, but regular PluginDefinitions may not. This will make it more explicit and intentional where the UI application will be running. In case of the Plugin it would be misleading to have the UI run in the Central Cluster and the Helm Release in the remote.
 
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
-| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
-| [decision driver b] | ---    | Good, because [argument b]    |
-| [decision driver c] | --     | Bad, because [argument c]     |
-| [decision driver d] | o      | Neutral, because [argument d] |
+| Stability           | o    |  Neutral, because the API is generally known and similar to the existing Plugings. But incompatible change to UIApplication and migration required.   |                                                                                                                                                                                                                                                                | 
+| Simplicity | ++    | Good, because the required controller will be simpler with shared functionality from the Helm Controller. But it requires migration of existing Plugins deployed in the Org namespace. |
+| Enforced Compliance | ++     | Good, because config can be enforced on the AdminPluginDefinition |
+| UI Integration | o      | Neutral, because the API objects are largely the same. |
 
 ### [option 3]
 
