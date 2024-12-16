@@ -1,10 +1,10 @@
-# 016-greenhouse-helm-controller-ng
+# 008-greenhouse-helm-controller-ng
 
-- Status: [draft] <!-- optional -->
-- Deciders: [list everyone involved in the decision] <!-- optional -->
-- Date: [YYYY-MM-DD when the decision was last updated] <!-- optional. To customize the ordering without relying on Git creation dates and filenames -->
+- Status: [accepted] <!-- optional -->
+- Deciders: [Abhijith R., David G., Ivo G.] <!-- optional -->
+- Date: [2024-12-16] <!-- optional. To customize the ordering without relying on Git creation dates and filenames -->
 - Tags: [greenhouse / cloudoperators] <!-- optional -->
-- Technical Story: [description | ticket/issue URL] <!-- optional -->
+- Technical Story: [plugins] <!-- optional -->
 
 ## Context and Problem Statement
 
@@ -40,25 +40,26 @@ There are two options to solve this problem:
 
 - Helm Controller with more development time
 - FluxCD Helm Operator
-- [option 3]
-- … <!-- numbers of options can vary -->
+- ArgoCD
 
 ## Decision Outcome
 
-Chosen option: "[option 1]",
-because [justification. e.g., only option, which meets k.o. criterion decision driver | which resolves force force | … | comes out best (see below)].
+Chosen option: "FluxCD Helm Operator",
+because the migration from the current Helm controller to Helm releases by Flux can be done seamlessly. The CRDs of Flux support the same features as the Plugin and PluginDefinition CRDs. With the additional benefit that FluxCD can be run in a Hub-Spoke model, where a central FluxCD instance inside the Greenohuse cluster can manage multiple clusters.
+The development cost is expected to be less than the continued development of the Helm Controller. This is due to the fact that the FluxCD Helm Operator is a proven solution that is widely adopted in the CNCF landscape. There will be continuous effort to operate the Flux deployment but this would also be the case for the Helm Controller.
 
 ### Positive Consequences <!-- optional -->
 
-- [e.g., improvement of quality attribute satisfaction, follow-up decisions required, …]
-- …
+- Close to a drop-in replacement for the current Helm Controller
+- Proven solution that is widely adopted in the CNCF landscape
+- Community support
+- No changes for the enduser
 
 ### Negative Consequences <!-- optional -->
 
-- [e.g., compromising quality attribute, follow-up decisions required, …]
-- …
-
-## Pros and Cons of the Options | Evaluation of options <!-- optional -->
+- Continuous effort to operate the Flux deployment
+- Initial effort to implement a new controller, that translates from Greenhouse CRDs into Flux CRDs
+- Initial effort to onboard the team with FluxCD
 
 ### Helm Controller with more development time
 
@@ -132,24 +133,25 @@ The flux resources in the org namespace can even be hidden from the enduser, as 
 | Simplicity | +++    | Good, because there are no changes for the enduser    |                                                                                                                                                                                                                                                                | 
 | Control | -    | Negative, while FluxCD is open-source there is no guarantee to have proposed a feature request or bug fix merged. |
 | Stability | +++     | Good, because this is a proven solution that is widely adopted in the CNCF landscape.     |
-| Development cost |   o/-   | Neutral/Negative, because there is development effort to implement the controller that translates from Greenhouse CRDs into Flux CRDs. Also the Status must be reliably be transferred back to the Plugin. Other existing controllers (HelmTest, WorkloadStatus) may need to be adjusted. Another factor is the operations of the Flux controller(s) which is a continuous effort. |
+| Development cost |   o/-   | Neutral/Negative, because there is development effort to implement the controller that translates from Greenhouse CRDs into Flux CRDs. A benefit is that the Flux CRDs map with the current features of the Plugin & PluginDefinition CRDs. Also the Status must be reliably be transferred back to the Plugin. Other existing controllers (HelmTest, WorkloadStatus) may need to be adjusted. Another factor is the operations of the Flux controller(s) which is a continuous effort. |
 
-### [option 3]
+### ArgoCD
 
-[example | description | pointer to more information | …] <!-- optional -->
+ArgoCD is a GitOps continuous delivery tool for Kubernetes. It follows the GitOps pattern of using Git repositories as the source of truth for defining the desired application state. It also supports Helm Charts as the source for Kubernetes Manifests but does not use Helm directly. All manifests are rendered and managed by ArgoCD itself. This means there are no Helm releases in the Kubernetes cluster.
+
+It also supports a Hub-Spoke model where one ArgoCD instance can manage multiple clusters. Furthermore, there are CRDs available to specify the desired state of the application. Secrets cannot be referenced easily from Kubernetes Secrets.
+
+Helm Charts that automatically generate values such as passwords or certificates do not work well out of the box with ArgoCD. The problem is that Argo will template the Helm Chart every time and compare with the deployed resources. This will always result in a diff. Therefore, it is necessary to adjust the values in such a way that they are stable between multiple executions of helm templates.
 
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
-| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                |
-| [decision driver b] | ---    | Good, because [argument b]    |
-| [decision driver c] | --     | Bad, because [argument c]     |
-| [decision driver d] | o      | Neutral, because [argument d] |
+| Simplicity | -  | Negative, because it requires reworking of how the Helm Charts are configured. Helm Charts with generated values need to be abjusted.    |                                                                                                                                                                                                                                                                |
+| Control | -    | Negative, while ArgoCD is open-source there is no guarantee to have proposed a feature request or bug fix merged.    |
+| Stability |	+++	| Good, because this is a proven solution that is widely adopted in the CNCF landscape. |
+| Development cost | --  | Negative, the CRDs from ArgoCD do not map directly to what the Plugins specify for the release. Currently the Plugins are strongly tied with Helm releases, Argo manages the resources without Helm. |
 
 ## Related Decision Records <!-- optional -->
 
-[previous decision record, e.g., an ADR, which is solved by this one | next decision record, e.g., an ADR, which solves this one | … | pointer to more information]
+none.
 
 ## Links <!-- optional -->
-
-- [Link type](link to adr) <!-- example: Refined by [xxx](yyyymmdd-xxx.md) -->
-- … <!-- numbers of links can vary -->
