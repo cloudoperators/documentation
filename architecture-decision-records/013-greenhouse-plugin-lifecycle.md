@@ -41,7 +41,6 @@ The goal of this ADR is to define a concept that allows:
 - Emergency fixes should be possible
 - How to handle failed upgrades: rollback vs forward fix (tendency: forward fix)
 
-
 ## Decision Drivers <!-- optional -->
 
 - Multiple versions of a PluginDefinition
@@ -55,7 +54,7 @@ The goal of this ADR is to define a concept that allows:
 - Argo Rollouts (Not viable ❌)
 - PluginPreset as the Orchestrator for Plugins
 - FluxCD
-- [option 4]
+- PluginDefinitionRevisions and external GitOps workflow
 - … <!-- numbers of options can vary -->
 
 ## Decision Outcome
@@ -338,7 +337,102 @@ end
 
 > ‡ For instance promoting using [an action and PR](https://fluxcd.io/flux/use-cases/gh-actions-helm-promotion/#define-the-promotion-github-workflow)
 
-### [option 4]
+### PluginDefinitionRevisions and external GitOps workflow
+
+The current implementation of PluginDefinitions does not support deploying multiple versions of the same PluginDefinition. This brings limitations to any rollout strategy, as all Plugins refer to the same PluginDefinition. If the PluginDefinition is updated, so will the Plugins referencing it. This means staging rollouts is not possible, and any breaking changes will affect all Plugins.
+Furthermore, the PluginDefinition is on the cluster scope, meaning an update affects all Organizations in the same Greenhouse instance at the same time.
+
+This design has the following limitations:
+
+- Changes to the defaults set by a PluginDefinition do not immediately take affect. The defaulting is done during the admission of a Plugin. That means if no changes to the Plugin are done, a potentially required new default value may be missing.
+- Using the existing PluginDefintion and it's version for a staged rollout will break, as soon as there is another version introduced during an active rollout. The HelmChart version and PluginOptions of the in progress rollout are overwritten.
+- In the case of a bad update, there is no way to rollback to a previous version of the PluginDefinition. The Plugin is stuck in a broken state, depending on the issue and the HelmController a rollback to the previous state may or may not be possible. Either way the Plugin cannot be updated to the previous version of the PluginDefinition. Only a rollback of the whole PluginDefinition is possible, which will affect all Plugins using this PluginDefinition.
+
+To address these issues a new PluginDefinitionRevision CRD is proposed. The PluginDefinitionRevision should similar to a revision of a Helm release provide a snapshot of the PluginDefinition at a certain version. The PluginDefinitionRevision is immutable and stores the `version`, `pluginOptions` and `helmChart` of a PluginDefinition. There may be multiple revisions for a single PluginDefinition.
+Instead of referencing a PluginDefinition, a Plugin and PluginPreset should reference a PluginDefinitionRevision. This will allow to stage rollouts of new PluginDefinitions, as well as provide a way to rollback to a previous version of a PluginDefinition. Also updates to a PluginDefinition will not affect an in progress rollout.
+
+The relationship between the different CRDs is depicted in the following ERD:
+
+```mermaid
+erDiagram
+PluginDefinition ||--|{ PluginDefinitionRevision : has 
+PluginPreset }o--|| PluginDefinitionRevision : ref
+Plugin }o--|| PluginDefinitionRevision : ref
+PluginPreset ||--|{ Plugin : owns
+
+PluginDefinition {
+    string    version
+    object    helmChart
+    object[]  pluginOption
+}
+
+PluginDefinitionRevision {
+    int       revision
+    string    version
+    object    helmChart
+    object[]  pluginOption
+}
+
+Plugin {
+    string    pluginDefinition
+    string    pluginDefinitionVersion
+    string    clusterName
+    object[]  pluginOptionValues
+}
+
+PluginPreset {
+    string    pluginDefinition
+    string    pluginDefinitionVersion
+    object[]  pluginOptionValues
+    object[]  clusterOverrides
+
+}
+```
+
+The PluginDefinitionRevision is immutable and is written each time the PluginDefinition is changed. This needs to be enforced during the PluginDefinition admission, so that inconsistent updates can be prevented.
+The requirement to change the used PluginDefinition version in the spec of a Plugin, ensures that the Admission and the defaulting are done correctly. (_Note: This mechanism could also be used for deprecating, removing or migration PluginOptionValuse between two versions_)
+
+The PluginPreset already manages some aspects of the Plugin lifecycle. Additionally, it could be extended to support semantic version constraints as part of this change. This would allow for semi-automatic updates if desired. In such a scenario, the PluginPreset could have a semantic version constraint on a certain minor version but allow any patch versions. (e.g. `^v1.1.x`) In this scenario any new PluginDefinitionRevision that brings a higher patch level would automatically be deployed.
+This version constraint will not be supported on the Plugin, since the known limitations of defaulting and admission would not be addressed.
+
+```yaml
+apiVersion: greenhouse.sap/v1alpha1
+kind: PluginPreset
+metadata:
+  name: cert-manager
+spec:
+  clusterSelector: {...}
+  plugin:
+    ...
+    optionValues: {}
+    pluginDefinition:
+      name: cert-manager
+      version: "^v1.1.x"
+    releaseNamespace: kube-system
+```
+
+The current case of automatically upgrading will also be supported by this mechanism. The PluginPreset can be configured to only pin the major version or not pin at all. This will allow for a fully automatic update of the PluginDefinition, if desired.
+
+The proposed changes only provide a way to control the update of a Plugin, but do not provide a way to rollout the changes. There are already many proven solutions and mechanisms that can be used. Therefore, Greenhouse should not provide a lock-in to any particular solution. Rather, it should provide the means to integrate with them.
+This option can also support a workflow as described in Option 3, where a 4-eyes principle is proposed for production changes.
+
+The PluginCatalog, discussed in a parallel ADR, should consider the support of a Renovate compatibe source. This way the updates of PluginPresets/Plugins can be supported via Renovate Pull Requests.
+
+It will also be possible to support this mechanism of version pinning from the UI. Here, it should be possible to select the PluginDefinition Version from the list of available PluginDefinitionRevisions.
+
+Now the Platform is still at an early stage where frequent updates of the PluginDefinitions are taking place. However, there needs to be a way to control the maximum number of revisions for a PluginDefinition. This is to prevent an unlimited number of revisions, and on the other hand there still needs to be a way to force the upgrade of a Plugin/PluginDefinition.
+
+[example | description | pointer to more information | …] <!-- optional -->
+
+| Decision Driver     | Rating | Reason                        |
+|---------------------|--------|-------------------------------|
+| Multiple Versions of a PluginDefinition | +++    | Good, because PluginDefinitionRevisions provide a way to switch between versions of a PluginDefinition. Also staged rollouts are supported.    |                                                                                                                                                                                                                                                                | 
+| Pinning of PluginDefinition versions | +++    | Good, because the PluginDefinition version can be specified.    |
+| Rollbacks on failure | +    | Good, because it is possible to switch to an older version of a PluginDefinition. Changes to a Plugin should be tracked in git and it should be able to revert to an ealier version. Changes to the HelmChart that potentially break on a rollback cannot be adressed. |
+| Staged Rollouts | +++    | Good, because the Plugin Admins of an Organization can decide how/when to update their Plugins. |
+
+
+### [option 5]
 
 [example | description | pointer to more information | …] <!-- optional -->
 
