@@ -8,7 +8,7 @@
 
 ## Context and Problem Statement
 
-PluginDefinitions are a core component of Greenhouse. They are used to extend the platform and to deploy content to the managed clusters. Currently, the deployment of these PluginDefinitions is not natively integrated into Greenhouse. This requires a separate deployment mechanism to be configured. Since the PluginDefinitions are used by the Greenhouse deployment itself, there is also a bootstrapping problem.
+PluginDefinitions are a core component of Greenhouse. They are used to extend the platform and to deploy content to the remote clusters. Currently, the deployment of these PluginDefinitions is not natively integrated into Greenhouse. It is necessary to configure a deployment mechanism to automatically receive plugin updates. Since the PluginDefinitions are used by the Greenhouse deployment itself, there is also a bootstrapping problem.
 
 This ADR addresses this problem and proposes a solution to natively integrate the deployment of PluginDefinitions into Greenhouse. This will allow to easily add additional sources for PluginDefinitions and to manage them in a more structured way.
 
@@ -27,7 +27,7 @@ This ADR addresses this problem and proposes a solution to natively integrate th
 ## Considered Options
 
 - PluginCatalog CRD to manage a repository of PluginDefinitions
-- [option 2]
+- PluginCaatalog CRD that configures Flux to manage a repository of PluginDefinitions
 - [option 3]
 - … <!-- numbers of options can vary -->
 
@@ -140,7 +140,108 @@ In order to ensure that the repository for the PluginDefinitions is secure and u
 | [decision driver c] | --     | Bad, because [argument c]     |
 | [decision driver d] | o      | Neutral, because [argument d] |
 
-### [option 2]
+### PluginCatalog CRD that configures Flux to manage a repository of PluginDefinitions
+
+The Catalog will be the Greenhouse-native way to bring PluginDefinitions into the Platform. The proposed first iteration will allow to sync PluginDefinitions from a git repository.
+
+The propsal includes moving the PluginDefinitions from the cluster-scope to the namespace. This brings more flexibility to the organizations like bringing their own PluginDefinitions into their namespace. The catalog of PluginDefinitions defined in [greenhouse-extensions](https://github.com/cloudoperators/greenhouse-extensions) would be automatically provisioned for each Organization.
+Each individual catalog should be easily defined by pointing to a git repository and optionally providing credentials for private repositories etc.
+
+By default the Catalog will point to a branch or ref of the git repository. In an interval the source repository will be checked and on a Change the `kustomize.yaml` will be invoked.
+
+The Git repository should therefore follow the convention of having a `kustomize.yaml` in the root of the project, which is pointing to the individual PluginDefinitions.
+
+```yaml
+# example git repository for a Catalog
+- root
+    - kustomize.yaml
+    - pluginDefinition1
+        - pluginDefinition.yaml
+        - chart
+    - pluginDefinition2
+        - pluginDefinition.yaml
+        - chart
+```
+
+The development of new Plugins and the testing of Updates need to be considered as well. Developing and consuming Plugins in the same Greenhouse organization can be possible by using pre release versions for the PluginDefinitions. [example](https://go.dev/play/p/3dsk1B-e8B-)
+This will allow in Combination with the PluginDefinitionRevision ADR to pin a Plugin/PluginPreset to a `1.0.1-rc.1` to test out a new feature or updates. Automatic updates of PluginPresets should ignore these versions.
+How these version should be deployed to the cluster can be left to the respective maintainer of the catalog. An incomplete list includes:
+
+- Catalog that points to a `dev` branch where development versions of a PluginDefiniton are merged into
+- Enhancing the `kustomize.yaml` and pointing to an additional `plugindefintion-dev.yaml` that includes the pre-release configuration of a PluginDefinition
+
+```yaml
+apiVersion: greenhouse.sap/v1alpha1
+kind: PluginDefinitionCatalog
+metadata:
+  name: greenhouse-core
+  namespace: my-organization
+spec:
+  source:
+    git:
+      repository: https://github.com/cloudoperators/greenhouse-extensions/
+      ref:
+        branch: main # tag: v0.1.0 , commit: 123456
+      interval: 5m
+  deletionPolicy:
+      maxRevisions: 5
+      ...
+```
+
+```mermaid
+flowchart LR
+
+cm(Community Member)
+pe(Platform Engineer)
+
+cc(Community Catalog)
+pc(Greenhouse Extensions Catalog)
+
+subgraph greenhouse["Greenhouse Cluster"]
+    subgraph ghNamespace["greenhouse"]
+        flux(FluxControllers)
+        catalogController(GreenhouseCatalogController)
+    end
+    subgraph orgNamespace["myorg"]
+        subgraph "Catalog community"
+            cCR["CatalogCR 'community'"]
+            cFGS[flux.GitRepository]
+            cFK[flux.Kustomize]
+            cCR -- defines --> cFGS
+            cCR -- defines --> cFK
+            cFK -. ref .-> cFGS
+            cFK -- creates --> cPD
+        end
+        
+        pCR["CatalogCR 'platform'"]
+        
+        pCR -- creates --> pPD
+        
+        pPD[PluginDefinition 'platform']
+        cPD[PluginDefinition 'community']
+    end
+
+end
+
+cm -. commits .-> cc
+pe -. commits .-> pc
+
+cFGS -- fetches --> cc
+pCR -- fetches --> pc
+
+catalogController -- reconciles --> cCR
+catalogController -- reconciles --> pCR
+
+
+```
+
+One potential issue with this method in combination with the proposed PluginDefinitionRevisions is the garbage collection of old revisions. On the one hand revisions should be purged eventually, on the other hand revisions in use should not be deleted to prevent any interruptions.
+
+A pragmatic approach would be to define a maximum number of revisions. Then an asynchronous job can periodically check for PluginDefinitions if there are more than the maximum number of revisions. In this case it should delete the smallest semantic version first, but only if it is no longer in use.
+This will eventually lead to older revisions being purged from the namespace.
+
+Another option would be to force upgrades, but this will cause problems with the declarative approach of Greenhouse. Just upgrading as soon as there are more than max revisions could also lead to unintended  
+
 
 [example | description | pointer to more information | …] <!-- optional -->
 
