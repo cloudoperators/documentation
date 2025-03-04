@@ -171,11 +171,11 @@ hc-controller --deploys--> c-prod
 
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
-| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
-| [decision driver b] | ---    | Good, because [argument b]    |
-| [decision driver c] | --     | Bad, because [argument c]     |
-| [decision driver d] | o      | Neutral, because [argument d] |
-
+|  Multiple versions of a PluginDefinition | o   | Neutral, because the proposed option requires additional complexity inside the PluginPresetController to allow keeping multiple Version of a PluginDefinition to support a staged rollout. This proposal only considers PluginPresets. Plugins are auto-upgraded on every PluginDefinition update.   |                                                                                                                                                                                                                                                                | 
+| Pinning of PluginDefinition versions for Plugins | ++    | Good, because the proposed changes to the PluginPreset will allow to pin a PluginDefinition.    |
+| Rollback on Failure | +     | Ok, because the PluginPresetController has full control over the PluginDefinitions.     |
+| Staged Rollouts | o      | Neutral, because multiple version upgrades in short succession may or may not interfere with the order of upgrading the PluginPreset. This proposal only considers PluginPresets. Plugins are auto-upgraded on every PluginDefinition update. |
+| Reporting of Plugin changes to the customer | o      | Neutral, because [argument d] |
 
 ### [PluginPreset as Orchestrator with support for Breaking changes / update opt-in/out]
 
@@ -204,10 +204,11 @@ Maybe only offer to set the time window to a day of week/time to have the possib
 
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
-| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
-| [decision driver b] | ---    | Good, because [argument b]    |
-| [decision driver c] | --     | Bad, because [argument c]     |
-| [decision driver d] | o      | Neutral, because [argument d] |
+|  Multiple versions of a PluginDefinition | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
+| Pinning of PluginDefinition versions for Plugins | ---    | Good, because [argument b]    |
+| Rollback on Failure | --     | Bad, because [argument c]     |
+| Staged Rollouts | o      | Neutral, because [argument d] |
+| Reporting of Plugin changes to the customer | o      | Neutral, because [argument d] |
 
 ### Flux
 
@@ -291,8 +292,8 @@ flowchart LR
 
 ```
 
-
 #### As a sequence diagram
+
 ```mermaid
 sequenceDiagram
 box firstApproval First Approval
@@ -336,6 +337,14 @@ end
 ```
 
 > ‡ For instance promoting using [an action and PR](https://fluxcd.io/flux/use-cases/gh-actions-helm-promotion/#define-the-promotion-github-workflow)
+
+| Decision Driver     | Rating | Reason                        |
+|---------------------|--------|-------------------------------|
+|  Multiple versions of a PluginDefinition | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
+| Pinning of PluginDefinition versions for Plugins | ---    | Good, because [argument b]    |
+| Rollback on Failure | --     | Bad, because [argument c]     |
+| Staged Rollouts | o      | Neutral, because [argument d] |
+| Reporting of Plugin changes to the customer | o      | Neutral, because [argument d] |
 
 ### PluginDefinitionRevisions and external GitOps workflow
 
@@ -426,10 +435,10 @@ Now the Platform is still at an early stage where frequent updates of the Plugin
 
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
-| Multiple Versions of a PluginDefinition | +++    | Good, because PluginDefinitionRevisions provide a way to switch between versions of a PluginDefinition. Also staged rollouts are supported.    |                                                                                                                                                                                                                                                                | 
-| Pinning of PluginDefinition versions | +++    | Good, because the PluginDefinition version can be specified.    |
-| Rollbacks on failure | +    | Good, because it is possible to switch to an older version of a PluginDefinition. Changes to a Plugin should be tracked in git and it should be able to revert to an ealier version. Changes to the HelmChart that potentially break on a rollback cannot be adressed. |
-| Staged Rollouts | +++    | Good, because the Plugin Admins of an Organization can decide how/when to update their Plugins. |
+| Multiple Versions of a PluginDefinition | +++    | Good, because PluginDefinitionRevisions provide a way to switch between versions of a PluginDefinition. Also staged rollouts are supported, by enabling Organizations to use the tool/methodology/etc. of their choice to deploy resoruces into their Greenhouse namespace.    |                                                                                                                                                                                                                                                                | 
+| Pinning of PluginDefinition versions | +++    | Good, because the PluginDefinition version can be specified. With PluginDefinitionRevisions the configuration of a specific version of a PluginDefinition is configured.    |
+| Rollbacks on failure | +    | Good, because it is possible to switch to an older version of a PluginDefinition. Changes to a Plugin should be tracked in git and it is possible to revert to an ealier version. This requires that the previous version of the PluginDefinition is still available. Changes to the HelmChart that potentially break on a rollback cannot be adressed. |
+| Staged Rollouts | +++    | Good, because the Plugin Admins of an Organization can decide how/when to update the Plugins. By managing the Greenhouse resources in a git repository, it will also be possible to have 4-eyes approval etc. on changes.|
 
 
 ### [option 5]
