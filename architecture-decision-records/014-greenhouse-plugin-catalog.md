@@ -8,9 +8,9 @@
 
 ## Context and Problem Statement
 
-PluginDefinitions are a core component of Greenhouse. They are used to extend the platform and to deploy content to the remote clusters. Currently, the deployment of these PluginDefinitions is not natively integrated into Greenhouse. It is necessary to configure a deployment mechanism to automatically receive plugin updates. Since the PluginDefinitions are used by the Greenhouse deployment itself, there is also a bootstrapping problem.
+PluginDefinitions are a core component of Greenhouse. They are used to extend the platform and to deploy content to the remote clusters. Currently, the deployment of these PluginDefinitions into Greenhouse is not natively integrated. There is no provided mechanism to deploy and update PluginDefinitions for Greenhouse. This has to be setup by each team operating a Greenhouse instance. PluginDefinitions are used in the Greenhouse Helm Chart itself, this leads to a bootstrapping problem on the first install.
 
-This ADR addresses this problem and proposes a solution to natively integrate the deployment of PluginDefinitions into Greenhouse. This will allow to easily add additional sources for PluginDefinitions and to manage them in a more structured way.
+This ADR addresses the mentioned problems and proposes a solution to natively integrate the deployment of PluginDefinitions into Greenhouse. This will allow to easily add additional sources for PluginDefinitions and to manage them in a more structured way.
 
 ## Decision Drivers <!-- optional -->
 
@@ -27,9 +27,8 @@ This ADR addresses this problem and proposes a solution to natively integrate th
 ## Considered Options
 
 - PluginCatalog CRD to manage a repository of PluginDefinitions
-- PluginCaatalog CRD that configures Flux to manage a repository of PluginDefinitions
+- PluginCatalog CRD that configures Flux to manage a repository of PluginDefinitions
 - [option 3]
-- … <!-- numbers of options can vary -->
 
 ## Decision Outcome
 
@@ -48,13 +47,13 @@ because [justification. e.g., only option, which meets k.o. criterion decision d
 
 ## Pros and Cons of the Options | Evaluation of options <!-- optional -->
 
-### PluginCatalog CRD with PluginDefinitions
+### Cluster-scoped PluginCatalog CRD with cluster-scoped PluginDefinitions
 
-The PluginCatalog CRD is a cluster-scoped resource that allows the Greenhouse admin team to control the available PluginDefinitions and their versions. This ensures Organization cannot add PluginDefinitions to the Greenhouse cluster,that could negatively impact other tenants on the same cluster.
+The PluginCatalog CRD is a cluster-scoped resource that allows the Greenhouse admin team to control the available PluginDefinitions and their versions. This ensures an Organization cannot add PluginDefinitions to the Greenhouse cluster, that could negatively impact other tenants on the same cluster. Also this ensures that the Greenhouse team can control the PluginDefinitions and their versions that are available to the Organizations.
 
-Having a dedicated PluginCatalog CRD allows to integrate the deployment of PluginDefinitions into the platform and removes the need for a separate deployment mechanism.
-A centrally managed PluginCatalog also allows to specify registry mirrors to be used. This allows to default registries specified inside the PluginDefinitions to a registry mirror.
-In order to easily support this, the PluginOptions are extended to an additonal type that is a `registry`. This type allows to flag a value specified on the Helm release to be a registry. This value can then be overridden/defaulted directly on the Plugin.
+Having a dedicated PluginCatalog CRD allows to integrate the deployment of PluginDefinitions into the platform and removes the need for a separate deployment mechanism. 
+A centrally managed PluginCatalog also allows to specify registry mirrors to be used. This allows to default registries specified inside the PluginDefinitions to a registry mirror. This ensures that the Images used in a Plugin use a trusted registry.
+In order to support this, the PluginOptions are extended to an additonal type that is a `registry`. This type allows to flag a value specified on the Helm release to be a registry. This value can then be overridden/defaulted directly on the Plugin.
 
 This requires a couple of changes on the PluginDefinition and Cluster CRDs:
 
@@ -133,19 +132,23 @@ p-controller --reconciles--> p
 
 In order to ensure that the repository for the PluginDefinitions is secure and up-to-date, there will be a template repository provided. This template repository includes GitHub actions to perform linting, testing, and building of the Helm Charts used in the PluginDefinitions. For external Helm Charts actions are configured to automatically open a pull request if there are updates available.
 
+Summarizing the PluginCatalog CRD allows to manage the update of PluginDefinitions in a structured way. The catalog is managed by the Greenhouse admin team and any additional PluginDefinitions and version upgrades must be approved by this team. The PluginCatalog controller ensures that the version of the Plugin currently running in the cluster is not automatically updated if the version is pinned. Both the PluginCatalog and the PluginDefinition CRDs are cluster-scoped resources being managed by the Greenhouse admin
+
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
-| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
-| [decision driver b] | ---    | Good, because [argument b]    |
-| [decision driver c] | --     | Bad, because [argument c]     |
-| [decision driver d] | o      | Neutral, because [argument d] |
+| Native integration of PluginDefinitions | +++    | Good, because there is a dedicated API and a custom controller to reconcile the PluginDefinitionCatalog. In case that there are specific requirements, they can be added to the controller.    |                                                                                                                                                                                                                                                                | 
+| Control over deployed PluginDefinitions | o    | Neutral, because the Greenhouse admin team has great control over which PluginDefinition may be created in the cluster. However, the individual organizations are dependent on the admin team to add their additional PluginDefinitions to a PluginDefinitionCatalog or to change their PluginDefinitionCatalog. |
+| Security & Compliance | +++  | Good, because the Greenhouse admin team can ensure updates of the PluginDefinitions are deployed in a timely manner.  |
 
-### PluginCatalog CRD that configures Flux to manage a repository of PluginDefinitions
+### Namespaced-scoped PluginDefinitionCatalog CRD that configures Flux to manage a git repository of PluginDefinitions
 
-The Catalog will be the Greenhouse-native way to bring PluginDefinitions into the Platform. The proposed first iteration will allow to sync PluginDefinitions from a git repository.
+In contrast to the first option this will introduce a namespaced-scope PluginDefinitionCatalog. This resource will be the Greenhouse-native way to bring PluginDefinitions into the Platform. The proposed first iteration will allow to sync PluginDefinitions from a git repository.
 
-The propsal includes moving the PluginDefinitions from the cluster-scope to the namespace. This brings more flexibility to the organizations like bringing their own PluginDefinitions into their namespace. The catalog of PluginDefinitions defined in [greenhouse-extensions](https://github.com/cloudoperators/greenhouse-extensions) would be automatically provisioned for each Organization.
-Each individual catalog should be easily defined by pointing to a git repository and optionally providing credentials for private repositories etc.
+In order to follow Kubernetes conventions, the PluginDefinitions need to move from the cluster-scope to the namespace-scope. This ensures that there are no namespaced resources that are managing resources on the cluster scope. Furthermore, this brings more flexibility to the individual organizations.
+It allows them to easily bring their own PluginDefinitions without having additional approval of the admin team. However, the PluginDefinitions that are allowed to be deployed into the cluster are still managed by the Greenhouse team. This is to ensuret that only approved PluginDefinitions can be deployed, which should largely be UI Applications.
+The catalog of PluginDefinitions defined in [greenhouse-extensions](https://github.com/cloudoperators/greenhouse-extensions) would be automatically provisioned for each Organization. This is to ensure that they have the curated set of PluginDefinitions readily available.
+
+Each individual catalog should be easily defined by pointing to a git repository and optionally providing credentials for private repositories etc..
 
 By default the Catalog will point to a branch or ref of the git repository. In an interval the source repository will be checked and on a Change the `kustomize.yaml` will be invoked.
 
@@ -240,17 +243,15 @@ One potential issue with this method in combination with the proposed PluginDefi
 A pragmatic approach would be to define a maximum number of revisions. Then an asynchronous job can periodically check for PluginDefinitions if there are more than the maximum number of revisions. In this case it should delete the smallest semantic version first, but only if it is no longer in use.
 This will eventually lead to older revisions being purged from the namespace.
 
-Another option would be to force upgrades, but this will cause problems with the declarative approach of Greenhouse. Just upgrading as soon as there are more than max revisions could also lead to unintended  
+Another option would be to force upgrades, but this will cause problems with the declarative approach of Greenhouse. Just upgrading as soon as there are more than max revisions could also lead to unintended side effects.
 
-
-[example | description | pointer to more information | …] <!-- optional -->
+Summarizing, both the PluginDefinitionCatalog and the PluginDefinitions will be made namespace-scoped resources. This gives the individual organizations more flexibility to manage their own PluginDefinitions. The backend of the PluginDefinitionCatalog will be largely handled by Flux, which reduces the complexity of the implementation. It is ensured the PluginDefinitions of the Greenhouse Extensions are available to all Organizations by default and that the Organziation may only deploy additional UI PluginDefinitions into the Greenhouse cluster.
 
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
-| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
-| [decision driver b] | ---    | Good, because [argument b]    |
-| [decision driver c] | --     | Bad, because [argument c]     |
-| [decision driver d] | o      | Neutral, because [argument d] |
+| Native integration of PluginDefinitions | ++    | Good, because there is a dedicated API and a custom controller to reconcile the PluginDefinitionCatalog. Since Flux has been chosen to deploy the Helm Releases of Plugins, there is the option to use it as well to manage the PluginDefinitionCatalog. This means there is no additional implementation effort for the backend of the catalog. |                                                                                                                                                                                                                                                                | 
+| Control over deployed PluginDefinitions | o    | Neutral, because the Greenhouse admin team has great control over the upstream repository hosting the PluginDefinitions. Also the selection of PluginDefinitions allowed in the central cluster is limited. However, the individual organizations are free to add additional PluginDefinitions. Depending on the final implementation the provisioned Catalog with the Greenhouse extensions may be fully under the Organizations control.|
+| Security & Compliance | o    | Neutral, because the Greenhouse admin team has great control over the upstream repository hosting the PluginDefinitions. However, the individual organizations are free to add additional PluginDefinitions. This means it is in the Organizations responsibility to update. In the future any compliance issues with the Helm Releases of a Plugin will be made visible to the Organization  |
 
 ### [option 3]
 
