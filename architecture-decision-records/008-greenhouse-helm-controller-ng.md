@@ -27,14 +27,14 @@ There are two options to solve this problem:
 ## Decision Drivers <!-- optional -->
 
 - Simplicity:
-  - The solution should work without any enduser facing changes.
+  - The solution should work without any end-user-facing changes.
 - Control:
   - The solution should allow to control the lifecycle of the Helm releases.
 - Stability:
   - The solution should be stable and reliable.
   - The lifecycle of the Helm releases should be handled correctly.
 - Development cost:
-  - Time spend on the development of the solution.
+  - Time spent on the development of the solution.
 
 ## Considered Options
 
@@ -45,7 +45,7 @@ There are two options to solve this problem:
 ## Decision Outcome
 
 Chosen option: "FluxCD Helm Operator",
-because the migration from the current Helm controller to Helm releases by Flux can be done seamlessly. The CRDs of Flux support the same features as the Plugin and PluginDefinition CRDs. With the additional benefit that FluxCD can be run in a Hub-Spoke model, where a central FluxCD instance inside the Greenohuse cluster can manage multiple clusters.
+because the migration from the current Helm controller to Helm releases by Flux can be done seamlessly. The CRDs of Flux support the same features as the Plugin and PluginDefinition CRDs. With the additional benefit that FluxCD can be run in a Hub-Spoke model, where a central FluxCD instance inside the Greenhouse cluster can manage multiple clusters.
 The development cost is expected to be less than the continued development of the Helm Controller. This is due to the fact that the FluxCD Helm Operator is a proven solution that is widely adopted in the CNCF landscape. There will be continuous effort to operate the Flux deployment but this would also be the case for the Helm Controller.
 
 ### Positive Consequences <!-- optional -->
@@ -53,7 +53,7 @@ The development cost is expected to be less than the continued development of th
 - Close to a drop-in replacement for the current Helm Controller
 - Proven solution that is widely adopted in the CNCF landscape
 - Community support
-- No changes for the enduser
+- No changes for the end user
 
 ### Negative Consequences <!-- optional -->
 
@@ -63,7 +63,7 @@ The development cost is expected to be less than the continued development of th
 
 ### Helm Controller with more development time
 
-The Helm controller supports the basic lifecycle around Helm actions. The Helm actions such as `install`, `upgrade`, `delete`, `rollback`, `diff` are already provided by upstream Helm. This means the controller manages the install, upgrade, and delete of a Plugin's Helm releases. Furthermore, it can diff the Helm release and rollback in case the prevoius upgrade fails.
+The Helm controller supports the basic lifecycle around Helm actions. The Helm actions such as `install`, `upgrade`, `delete`, `rollback`, `diff` are already provided by upstream Helm. This means the controller manages the install, upgrade, and delete of a Plugin's Helm releases. Furthermore, it can diff the Helm release and roll back in case the previous upgrade fails.
 
 Currently there is a list of features that is not supported:
 
@@ -75,7 +75,7 @@ Currently there is a list of features that is not supported:
 
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
-| Simplicity | +++    | Good, because virtually no changes for the enduser.    |                                                                                                                                                                                                                                                                | 
+| Simplicity | +++    | Good, because virtually no changes for the end user.    |                                                                                                                                                                                                                                                                | 
 | Control | ++    | Good, because we have the whole source code, besides upstream helm, under our control.    |
 | Stability | o     | Neutral, because the current state of the controller is lacking some key features. We only have limited time and a limited amount of hands to keep working on the Helm Controller.     |
 | Development cost | --      | Negative, because there are a multitude of features missing to make the controller work reliable and to support the full plugin lifecycle. |
@@ -125,15 +125,15 @@ flowchart LR
   fc --> rmr
 ```
 
-The enduser facing changes are none. All the data required by the FluxCD Helm Operator is already present in the Plugin, PluginDefinition and Cluster CRDs.
-The flux resources in the org namespace can even be hidden from the enduser, as they should be managed only by Greenhouse. The enduser should only see the status of Flux's HelmRelease resource reflected in the Plugin's status.
+There are no end-user-facing changes. All the data required by the FluxCD Helm Operator is already present in the Plugin, PluginDefinition and Cluster CRDs.
+The Flux resources in the org namespace can even be hidden from the end user, as they should be managed only by Greenhouse. The end user should only see the status of Flux's HelmRelease resource reflected in the Plugin's status.
 
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
-| Simplicity | +++    | Good, because there are no changes for the enduser    |                                                                                                                                                                                                                                                                | 
-| Control | -    | Negative, while FluxCD is open-source there is no guarantee to have proposed a feature request or bug fix merged. |
+| Simplicity | +++    | Good, because there are no changes for the end user.    |                                                                                                                                                                                                                                                                | 
+| Control | -    | Negative, while FluxCD is open source there is no guarantee to have a proposed feature request or a bug fix merged. |
 | Stability | +++     | Good, because this is a proven solution that is widely adopted in the CNCF landscape.     |
-| Development cost |   o/-   | Neutral/Negative, because there is development effort to implement the controller that translates from Greenhouse CRDs into Flux CRDs. A benefit is that the Flux CRDs map with the current features of the Plugin & PluginDefinition CRDs. Also the Status must be reliably be transferred back to the Plugin. Other existing controllers (HelmTest, WorkloadStatus) may need to be adjusted. Another factor is the operations of the Flux controller(s) which is a continuous effort. |
+| Development cost |   o/-   | Neutral/Negative, because there is a development effort to implement the controller that translates from Greenhouse CRDs into Flux CRDs. A benefit is that the Flux CRDs map with the current features of the Plugin & PluginDefinition CRDs. Also the Status must be reliably transferred back to the Plugin. Other existing controllers (HelmTest, WorkloadStatus) may need to be adjusted. Another factor is the operations of the Flux controller(s) which is a continuous effort. |
 
 ### ArgoCD
 
@@ -145,13 +145,13 @@ Helm Charts that automatically generate values such as passwords or certificates
 
 | Decision Driver     | Rating | Reason                        |
 |---------------------|--------|-------------------------------|
-| Simplicity | -  | Negative, because it requires reworking of how the Helm Charts are configured. Helm Charts with generated values need to be abjusted.    |                                                                                                                                                                                                                                                                |
-| Control | -    | Negative, while ArgoCD is open-source there is no guarantee to have proposed a feature request or bug fix merged.    |
+| Simplicity | -  | Negative, because it requires reworking of how the Helm Charts are configured. Helm Charts with generated values need to be adjusted.    |                                                                                                                                                                                                                                                                |
+| Control | -    | Negative, while ArgoCD is open-source there is no guarantee to have a proposed feature request or a bug fix merged.    |
 | Stability |	+++	| Good, because this is a proven solution that is widely adopted in the CNCF landscape. |
 | Development cost | --  | Negative, the CRDs from ArgoCD do not map directly to what the Plugins specify for the release. Currently the Plugins are strongly tied with Helm releases, Argo manages the resources without Helm. |
 
 ## Related Decision Records <!-- optional -->
 
-none.
+None.
 
 ## Links <!-- optional -->
