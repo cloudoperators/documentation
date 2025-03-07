@@ -1,10 +1,9 @@
-# 014-greenhouse-plugin-catalog
+# 010-greenhouse-plugin-catalog
 
-- Status: [draft] <!-- optional -->
-- Deciders: [list everyone involved in the decision] <!-- optional -->
-- Date: [YYYY-MM-DD when the decision was last updated] <!-- optional. To customize the ordering without relying on Git creation dates and filenames -->
+- Status: [accepted] <!-- optional -->
+- Deciders:  Abhi, Akshay, David, Ivo, Martin, Uwe, Richard
+- Date: [2025-03-07] <!-- optional. To customize the ordering without relying on Git creation dates and filenames -->
 - Tags: [greenhouse] <!-- optional -->
-- Technical Story: [description | ticket/issue URL] <!-- optional -->
 
 ## Context and Problem Statement
 
@@ -26,24 +25,31 @@ This ADR addresses the mentioned problems and proposes a solution to natively in
 
 ## Considered Options
 
-- PluginCatalog CRD to manage a repository of PluginDefinitions
-- PluginCatalog CRD that configures Flux to manage a repository of PluginDefinitions
-- [option 3]
+- Cluster-scoped PluginCatalog CRD with cluster-scoped PluginDefinitions
+- Namespaced-scoped PluginDefinitionCatalog CRD that configures Flux to manage a git repository of PluginDefinitions
 
 ## Decision Outcome
 
-Chosen option: "[option 1]",
-because [justification. e.g., only option, which meets k.o. criterion decision driver | which resolves force force | … | comes out best (see below)].
+Chosen option: "Namespaced-scoped PluginDefinitionCatalog CRD that configures Flux to manage a git repository of PluginDefinitions",
+because this options provides the most flexibility and covers the current requirements. It allows both the Greenhouse admin team and the individual organizations to easily add and update PluginDefinitions.
+Making the PluginDefinition a namespace-scoped resource also removes the need for central management and approval of Plugins. The Catalog is now in the responsibility of the individual organizations.
+The first iteration will allow to sync PluginDefinitions from a git repository. Under the hood this will be configured with FluxCD resources.
+
+There will be a default catalog provisioned for each Organization that includes the PluginDefinitions from the Greenhouse Extensions repository. This catalog is managed by the controller and will be updated automatically.
+For Community Catalogs there will be a template repository provided, with a set of Github Actions to make the development of PluginDefinitions easier.
+
+The difference between Greenhouse Extensions and Community catalogs is that the Greenhouse Extensions catalog should provide the tools to manage and operate infrastructure components. The PluginDefinitions in a community catalog are more focused on the individual needs of the organization. This includes but is not limited to specific UI Applications, operations bundles (metric exporter, Prometheus rules, Perses dashboards etc.) or other tools that are either domain specific or even internal.
 
 ### Positive Consequences <!-- optional -->
 
-- [e.g., improvement of quality attribute satisfaction, follow-up decisions required, …]
-- …
+- The bootstrapping problem on the first install of Greenhouse is improved, now that PluginDefinitions are managed by a CRD, they can be deployed without additional steps.
+- Moving the PluginDefinitions to a namespace-scoped resource allows the individual organizations to manage their own PluginDefinitions.
+- The solution is based on FluxCD, which is already used in Greenhouse to deploy the Helm Releases of Plugins. This reduces the complexity of the implementation.
+- The Greenhouse admin team can ensure that updates to the Greenhouse extensions catalog are deployed in a timely manner and that the PluginDefinitions are secure and up-to-date.
 
 ### Negative Consequences <!-- optional -->
 
-- [e.g., compromising quality attribute, follow-up decisions required, …]
-- …
+- The Greenhouse admin team has less control over the PluginDefinitions that can be deployed into a remote cluster. This is now in the responsibility of the individual organizations.
 
 ## Pros and Cons of the Options | Evaluation of options <!-- optional -->
 
@@ -253,20 +259,10 @@ Summarizing, both the PluginDefinitionCatalog and the PluginDefinitions will be 
 | Control over deployed PluginDefinitions | o    | Neutral, because the Greenhouse admin team has great control over the upstream repository hosting the PluginDefinitions. Also the selection of PluginDefinitions allowed in the central cluster is limited. However, the individual organizations are free to add additional PluginDefinitions. Depending on the final implementation the provisioned Catalog with the Greenhouse extensions may be fully under the Organizations control.|
 | Security & Compliance | o    | Neutral, because the Greenhouse admin team has great control over the upstream repository hosting the PluginDefinitions. However, the individual organizations are free to add additional PluginDefinitions. This means it is in the Organizations responsibility to update. In the future any compliance issues with the Helm Releases of a Plugin will be made visible to the Organization  |
 
-### [option 3]
-
-[example | description | pointer to more information | …] <!-- optional -->
-
-| Decision Driver     | Rating | Reason                        |
-|---------------------|--------|-------------------------------|
-| [decision driver a] | +++    | Good, because [argument a]    |                                                                                                                                                                                                                                                                | 
-| [decision driver b] | ---    | Good, because [argument b]    |
-| [decision driver c] | --     | Bad, because [argument c]     |
-| [decision driver d] | o      | Neutral, because [argument d] |
-
 ## Related Decision Records <!-- optional -->
 
-[previous decision record, e.g., an ADR, which is solved by this one | next decision record, e.g., an ADR, which solves this one | … | pointer to more information]
+- [ADR-009: Helm Controller](./009-greenhouse-helm-controller-ng.md): This ADR decided to introduce Flux as a replacement for the HelmController. Flux will also be used as the backend for the Catalog.
+- [ADR-011: Plugin Lifecycle](./011-greenhouse-plugin-lifecycle.md): This ADR will define the lifecycle of a Plugin and builds on top of the PluginDefinitionCatalog.
 
 ## Links <!-- optional -->
 
